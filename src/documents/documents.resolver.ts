@@ -1,5 +1,5 @@
-import { Inject, Query } from '@nestjs/common';
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Inject } from '@nestjs/common';
+import { Args, Mutation, Resolver, Query } from '@nestjs/graphql';
 import { DocumentSchema } from './document.schema';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentInput } from './dto/create-document.input';
@@ -21,7 +21,7 @@ export class DocumentsResolver {
         return await this.documentService.findAll();
     }
 
-    @Mutation((returns) => [DocumentSchema])
+    @Mutation((returns) => DocumentSchema)
     async createDocument(
         @Args() input: CreateDocumentInput
     ): Promise<DocumentSchema> {
