@@ -8,5 +8,5 @@ export class UpdateDocumentInput extends PartialType(CreateDocumentInput) {
     expirationDate: Date;
 
     @Field()
-    state: String;
+    state: number;
 }

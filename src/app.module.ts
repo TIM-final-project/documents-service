@@ -3,6 +3,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmConfigService } from './config';
 import { DocumentsModule } from './documents/documents.module';
+import { TypesModule } from './types/types.module';
 
 @Module({
   imports: [
@@ -14,7 +15,8 @@ import { DocumentsModule } from './documents/documents.module';
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql'
     }),
-    DocumentsModule
+    DocumentsModule,
+    TypesModule
   ]
 })
 export class AppModule {}

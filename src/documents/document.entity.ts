@@ -13,5 +13,5 @@ export class DocumentEntity {
   @Column({
     nullable: false,
   })
-  state: String;
+  state: number;
 }

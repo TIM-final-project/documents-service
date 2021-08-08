@@ -9,5 +9,5 @@ export class DocumentSchema {
   expirationDate: Date;
 
   @Field({ nullable: true })
-  state: String;
+  state: number;
 }

@@ -6,5 +6,5 @@ export class CreateDocumentInput {
   expirationDate: Date;
 
   @Field()
-  state: String;
+  state: number;
 }
