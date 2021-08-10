@@ -1,4 +1,5 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { DocumentTypeSchema } from 'src/types/type.schema';
 
 @ObjectType()
 export class DocumentSchema {
@@ -6,8 +7,11 @@ export class DocumentSchema {
   id?: number;
 
   @Field({ nullable: true })
-  expirationDate: Date;
+  expirationDate?: Date;
 
   @Field({ nullable: true })
-  state: number;
+  state?: number;
+
+  @Field(() => DocumentTypeSchema, {nullable: true})
+  type?: DocumentTypeSchema;
 }

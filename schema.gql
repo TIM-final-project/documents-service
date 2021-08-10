@@ -2,10 +2,17 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type DocumentTypeSchema {
+  id: ID
+  name: String
+  appliesTo: Float
+}
+
 type DocumentSchema {
   id: ID
   expirationDate: DateTime
-  state: String
+  state: Float
+  type: DocumentTypeSchema
 }
 
 """
@@ -16,14 +23,16 @@ scalar DateTime
 type Query {
   document(id: Float!): DocumentSchema!
   allDocuments: [DocumentSchema!]!
+  allTypes: [DocumentTypeSchema!]!
+  typeByEntity(entityType: Float!): [DocumentTypeSchema!]!
 }
 
 type Mutation {
-  createDocument(expirationDate: DateTime!, state: String!): DocumentSchema!
+  createDocument(expirationDate: DateTime!, state: Float!): DocumentSchema!
   updateDocument(input: UpdateDocumentInput!, id: Float!): DocumentSchema!
 }
 
 input UpdateDocumentInput {
   expirationDate: DateTime
-  state: String!
+  state: Float!
 }

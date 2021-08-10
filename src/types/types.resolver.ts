@@ -16,7 +16,7 @@ export class TypesResolver {
   }
 
   @Query((returns) => [DocumentTypeSchema])
-  async typeByEntity(@Args() entityType: number): Promise<DocumentTypeSchema[]> {
+  async typeByEntity(@Args('entityType') entityType: number): Promise<DocumentTypeSchema[]> {
     return await this.typesService.findByEntity(entityType);
   }
 }
