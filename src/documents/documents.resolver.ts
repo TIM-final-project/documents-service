@@ -1,5 +1,5 @@
 import { Inject } from '@nestjs/common';
-import { Args, Mutation, Resolver, Query } from '@nestjs/graphql';
+import { Args, Mutation, Resolver, Query, ResolveField, Parent } from '@nestjs/graphql';
 import { DocumentSchema } from './document.schema';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentInput } from './dto/create-document.input';
@@ -41,5 +41,10 @@ export class DocumentsResolver {
       input,
     );
     return documentSchema;
+  }
+
+  @ResolveField((of) => DocumentSchema)
+  user(@Parent() document: DocumentSchema): any {
+    return { __typename: 'contractor', id: document.entityId };
   }
 }

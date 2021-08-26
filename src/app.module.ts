@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { GraphQLModule } from '@nestjs/graphql';
+import { GraphQLFederationModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmConfigService } from './config';
 import { DocumentsModule } from './documents/documents.module';
+import { ContractorSchema } from './external/entities/contractor/contractor.schema';
 import { TypesModule } from './types/types.module';
 
 @Module({
@@ -12,8 +13,11 @@ import { TypesModule } from './types/types.module';
       inject: [],
       useClass: TypeOrmConfigService
     }),
-    GraphQLModule.forRoot({
-      autoSchemaFile: 'schema.gql'
+    GraphQLFederationModule.forRoot({
+      autoSchemaFile: 'schema.gql',
+      buildSchemaOptions: {
+        orphanedTypes: [ContractorSchema],
+      }
     }),
     DocumentsModule,
     TypesModule

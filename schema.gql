@@ -2,6 +2,22 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+directive @key(fields: String!) on OBJECT | INTERFACE
+
+directive @extends on OBJECT | INTERFACE
+
+directive @external on OBJECT | FIELD_DEFINITION
+
+directive @requires(fields: String!) on FIELD_DEFINITION
+
+directive @provides(fields: String!) on FIELD_DEFINITION
+
+type ContractorSchema {
+  id: ID!
+  documents: [DocumentSchema!]!
+  documentByEntity: [DocumentSchema!]!
+}
+
 type DocumentTypeSchema {
   id: ID
   name: String
@@ -13,6 +29,8 @@ type DocumentSchema {
   expirationDate: DateTime
   state: Float
   type: DocumentTypeSchema
+  entityId: Float!
+  user: DocumentSchema!
 }
 
 """
