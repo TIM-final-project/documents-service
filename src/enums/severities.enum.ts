@@ -1,5 +1,5 @@
 export enum Severities {
-    HIGH,
-    MEDIUM,
-    LOW,
+  HIGH,
+  MEDIUM,
+  LOW,
 }

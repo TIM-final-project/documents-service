@@ -1,6 +1,6 @@
 export enum Entity {
   ADMIN,
-  DRIVER,
+  RESOURCE,
   CONTRACTOR,
   AUDITOR,
   MANAGER,

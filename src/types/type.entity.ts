@@ -1,5 +1,8 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { SeverityEntity } from './severity.entity';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class DocumentTypeEntity {
@@ -12,7 +15,6 @@ export class DocumentTypeEntity {
   @Column({ nullable: false })
   appliesTo: number;
 
-  @OneToOne(() => SeverityEntity)
-  @JoinColumn()
-  severity: SeverityEntity;
+  @Column({ nullable: false })
+  severity: string;
 }

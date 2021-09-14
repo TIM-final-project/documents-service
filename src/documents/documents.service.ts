@@ -3,9 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Entity } from 'src/enums/entity.enum';
 import { Repository } from 'typeorm';
 import { DocumentEntity } from './document.entity';
-import { DocumentSchema } from './document.schema';
-import { CreateDocumentInput } from './dto/create-document.input';
-import { UpdateDocumentInput } from './dto/update-document.input';
+import { CreateDocumentDto } from './dto/create-document.dto';
+import { UpdateDocumentDto } from './dto/update-document.dto';
 
 @Injectable()
 export class DocumentsService {
@@ -22,21 +21,21 @@ export class DocumentsService {
     return this.documentRepository.findOne(id);
   }
 
-  create(documentInputDTO: CreateDocumentInput): Promise<DocumentEntity> {
-    return this.documentRepository.save(documentInputDTO as DocumentEntity);
+  create(documentDto: CreateDocumentDto): Promise<DocumentEntity> {
+    return this.documentRepository.save(documentDto as DocumentEntity);
   }
 
   async update(
     id: number,
-    documentInputDTO: UpdateDocumentInput,
+    documentDto: UpdateDocumentDto,
   ): Promise<DocumentEntity> {
     const document: DocumentEntity =
       await this.documentRepository.findOne(id);
-    this.documentRepository.merge(document, documentInputDTO);
+    this.documentRepository.merge(document, documentDto);
     return this.documentRepository.save(document);
   }
 
-  findByEntity(id: number, CONTRACTOR: Entity): Promise<DocumentSchema[]> {
-    throw new Error('Method not implemented.');
-  }
+  // findByEntity(id: number, CONTRACTOR: Entity): Promise<DocumentSchema[]> {
+  //   throw new Error('Method not implemented.');
+  // }
 }
