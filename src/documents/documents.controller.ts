@@ -20,7 +20,9 @@ export class DocumentsController {
 
   @Post()
   async create(@Body() documentDto: CreateDocumentDto): Promise<DocumentDto> {
-    return this.documentsService.create(documentDto);
+    const { type } = documentDto;
+    delete documentDto.type;
+    return this.documentsService.create(documentDto, type);
   }
 
   @Put(':id')

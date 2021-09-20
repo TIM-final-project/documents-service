@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Entity } from 'src/enums/entity.enum';
+import { DocumentTypeEntity } from 'src/types/type.entity';
 import { Repository } from 'typeorm';
 import { DocumentEntity } from './document.entity';
 import { CreateDocumentDto } from './dto/create-document.dto';
@@ -11,18 +11,26 @@ export class DocumentsService {
   constructor(
     @InjectRepository(DocumentEntity)
     private documentRepository: Repository<DocumentEntity>,
+    @InjectRepository(DocumentTypeEntity)
+    private documentTypeRepository: Repository<DocumentTypeEntity>
   ) {}
 
   findAll(): Promise<DocumentEntity[]> {
-    return this.documentRepository.find();
+    return this.documentRepository.find({ relations: ["type"] });
   }
 
   findOne(id: number): Promise<DocumentEntity> {
-    return this.documentRepository.findOne(id);
+    return this.documentRepository.findOne(id, { relations: ["type"] });
   }
 
-  create(documentDto: CreateDocumentDto): Promise<DocumentEntity> {
-    return this.documentRepository.save(documentDto as DocumentEntity);
+  async create(documentDto: CreateDocumentDto, type: number): Promise<DocumentEntity> {
+    const documentType: DocumentTypeEntity = await this.documentTypeRepository.findOne(type);
+    const document: DocumentEntity = {
+      expirationDate: documentDto.expirationDate,
+      state: documentDto.state,
+      type: documentType
+    };
+    return this.documentRepository.save(document);
   }
 
   async update(
