@@ -24,7 +24,9 @@ export class DocumentsService {
   }
 
   async create(documentDto: CreateDocumentDto, type: number): Promise<DocumentEntity> {
+    console.log('DOCUMENTS SERVICE --- CREATING DOCUMENT ', { documentDto, type });
     const documentType: DocumentTypeEntity = await this.documentTypeRepository.findOne(type);
+    console.log('DOCUMENTS SERVICE --- TYPE: ', { documentType });
     const document: DocumentEntity = {
       expirationDate: documentDto.expirationDate,
       state: documentDto.state,

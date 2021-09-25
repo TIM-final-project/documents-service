@@ -1,6 +1,8 @@
+import { DocumentEntity } from 'src/documents/document.entity';
 import {
   Column,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -17,4 +19,7 @@ export class DocumentTypeEntity {
 
   @Column({ nullable: false })
   severity: string;
+
+  @OneToMany(() => DocumentEntity, document => document.type)
+  documents: DocumentEntity[]
 }

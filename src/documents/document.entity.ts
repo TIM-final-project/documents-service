@@ -1,5 +1,5 @@
 import { DocumentTypeEntity } from 'src/types/type.entity';
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class DocumentEntity {
@@ -16,7 +16,6 @@ export class DocumentEntity {
   })
   state: number;
 
-  @OneToOne(() => DocumentTypeEntity)
-  @JoinColumn()
+  @ManyToOne(() => DocumentTypeEntity, (type) => type.documents)
   type: DocumentTypeEntity;
 }

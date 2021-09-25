@@ -1,5 +1,5 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { Entity } from 'src/enums/entity.enum';
+import { Body, Controller, Get, Param } from '@nestjs/common';
+import { MessagePattern } from '@nestjs/microservices';
 import { DocumentTypeDto } from './type.dto';
 import { TypesService } from './types.service';
 
@@ -7,13 +7,15 @@ import { TypesService } from './types.service';
 export class TypesController {
   constructor(private typesService: TypesService) {}
 
-  @Get()
+  // @Get()
+  @MessagePattern('types_find_all')
   async allTypes(): Promise<DocumentTypeDto[]> {
     return this.typesService.findAll();
   }
 
-  @Get(':entityId')
-  async findByEntityId(@Param('entityId') entityId: number): Promise<DocumentTypeDto[]> {
+  // @Get(':entityId')
+  @MessagePattern('types_find_by_entity')
+  async findByEntityId(@Body('entityId') entityId: number): Promise<DocumentTypeDto[]> {
     return this.typesService.findByEntity(entityId);
   }
 }
