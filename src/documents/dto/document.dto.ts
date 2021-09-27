@@ -6,4 +6,5 @@ export class DocumentDto {
   state?: number;
   type?: DocumentTypeDto;
   entityId?: number;
+  entityType?: number;
 }

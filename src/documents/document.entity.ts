@@ -18,4 +18,14 @@ export class DocumentEntity {
 
   @ManyToOne(() => DocumentTypeEntity, (type) => type.documents)
   type: DocumentTypeEntity;
+
+  @Column({
+    nullable: false
+  })
+  entityId: number;
+
+  @Column({
+    nullable: false
+  })
+  entityType: number;
 }

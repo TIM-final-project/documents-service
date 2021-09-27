@@ -28,8 +28,7 @@ export class DocumentsService {
     const documentType: DocumentTypeEntity = await this.documentTypeRepository.findOne(type);
     console.log('DOCUMENTS SERVICE --- TYPE: ', { documentType });
     const document: DocumentEntity = {
-      expirationDate: documentDto.expirationDate,
-      state: documentDto.state,
+      ...documentDto,
       type: documentType
     };
     return this.documentRepository.save(document);
@@ -45,7 +44,13 @@ export class DocumentsService {
     return this.documentRepository.save(document);
   }
 
-  // findByEntity(id: number, CONTRACTOR: Entity): Promise<DocumentSchema[]> {
-  //   throw new Error('Method not implemented.');
-  // }
+  findByEntity(id: number, type: number): Promise<DocumentEntity[]> {
+    console.log('DOCUMENTS BY ENTITY: ', { id, type });
+    return this.documentRepository
+      .createQueryBuilder('document')
+      .innerJoin('document.type', 'type')
+      .where('document.entityId = :id', { id })
+      .andWhere('document.entityType = :type', { type })
+      .getMany();
+  }
 }

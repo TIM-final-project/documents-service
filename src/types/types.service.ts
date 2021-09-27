@@ -7,7 +7,7 @@ import { DocumentTypeEntity } from './type.entity';
 export class TypesService {
   constructor(
     @InjectRepository(DocumentTypeEntity)
-    private documentTypeRepository: Repository<DocumentTypeEntity>
+    private documentTypeRepository: Repository<DocumentTypeEntity>,
   ) {}
 
   findAll(): Promise<DocumentTypeEntity[]> {
@@ -17,7 +17,7 @@ export class TypesService {
   findByEntity(appliesTo: number): Promise<DocumentTypeEntity[]> {
     return this.documentTypeRepository
       .createQueryBuilder('type')
-      .where('type.appliesTo = :appliesTo', {appliesTo})
+      .where('type.appliesTo = :appliesTo', { appliesTo })
       .getMany();
   }
 }

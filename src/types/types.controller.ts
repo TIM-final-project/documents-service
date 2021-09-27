@@ -15,7 +15,7 @@ export class TypesController {
 
   // @Get(':entityId')
   @MessagePattern('types_find_by_entity')
-  async findByEntityId(@Body('entityId') entityId: number): Promise<DocumentTypeDto[]> {
-    return this.typesService.findByEntity(entityId);
+  async findByEntityType(@Body('entityType') entityType: number): Promise<DocumentTypeDto[]> {
+    return this.typesService.findByEntity(entityType);
   }
 }
