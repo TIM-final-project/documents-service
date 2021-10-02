@@ -4,6 +4,7 @@ import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { DocumentDto } from './dto/document.dto';
 import { DocumentsByEntityDto } from './dto/documents-by-entity.dto';
+import { documentRequestDto } from './dto/documents-request.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 
 @Controller('documents')
@@ -12,8 +13,8 @@ export class DocumentsController {
 
   // @Get()
   @MessagePattern('documents_find_all')
-  async findAll(): Promise<DocumentDto[]> {
-    return this.documentsService.findAll();
+  async findAll(query: documentRequestDto): Promise<DocumentDto[]> {
+    return this.documentsService.findAll(query);
   }
 
   // @Get(':id')
@@ -37,11 +38,5 @@ export class DocumentsController {
     const { id } = documentDto;
     delete documentDto.id;
     return this.documentsService.update(id, documentDto);
-  }
-
-  @MessagePattern('documents_by_entity')
-  async findByEntity(@Body() dto: DocumentsByEntityDto): Promise<DocumentDto[]> {
-    console.log('DOCUMENTS BY ENTITY: ', { ...dto });
-    return this.documentsService.findByEntity(dto.id, dto.type);
   }
 }
