@@ -4,4 +4,5 @@ export class CreateDocumentDto {
   type: number;
   entityId: number;
   entityType: number;
+  photos?: [string];
 }

@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
-import { MessagePattern } from '@nestjs/microservices';
+import {Controller, Logger} from '@nestjs/common';
+import { MessagePattern, RpcException } from '@nestjs/microservices';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { DocumentDto } from './dto/document.dto';
@@ -8,6 +8,9 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 
 @Controller('documents')
 export class DocumentsController {
+
+  private logger = new Logger(DocumentsController.name);
+
   constructor (private documentsService: DocumentsService) {}
 
   // @Get()
@@ -18,21 +21,32 @@ export class DocumentsController {
 
   // @Get(':id')
   @MessagePattern('documents_find_by_id')
-  async findOne(@Body('id') id: number): Promise<DocumentDto> {
+  async findOne(id: number): Promise<DocumentDto> {
     return this.documentsService.findOne(id);
   }
 
   // @Post()
   @MessagePattern('documents_create')
-  async create(@Body() documentDto: CreateDocumentDto): Promise<DocumentDto> {
+  async create(documentDto: CreateDocumentDto): Promise<DocumentDto> {
     const { type } = documentDto;
     delete documentDto.type;
-    return this.documentsService.create(documentDto, type);
+    
+
+    var photos: Array<string> = [];
+    if(!documentDto.photos.length){
+      throw new RpcException({message: "Es necesario cargar una foto asociada al documento."});
+    }
+
+    documentDto.photos.forEach(photo => {
+      photos.push(photo.substring(photo.indexOf(",") + 1));
+    });
+
+    return this.documentsService.create(documentDto, type, photos);
   }
 
   // @Put(':id')
   @MessagePattern('documents_update')
-  async update(@Body() documentDto: UpdateDocumentDto): Promise<DocumentDto> {
+  async update(documentDto: UpdateDocumentDto): Promise<DocumentDto> {
     console.log('Update contractor request ', { ...documentDto });
     const { id } = documentDto;
     delete documentDto.id;
@@ -40,8 +54,9 @@ export class DocumentsController {
   }
 
   @MessagePattern('documents_by_entity')
-  async findByEntity(@Body() dto: DocumentsByEntityDto): Promise<DocumentDto[]> {
+  async findByEntity(dto: DocumentsByEntityDto): Promise<DocumentDto[]> {
     console.log('DOCUMENTS BY ENTITY: ', { ...dto });
     return this.documentsService.findByEntity(dto.id, dto.type);
   }
+
 }

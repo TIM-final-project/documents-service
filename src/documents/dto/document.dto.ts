@@ -7,4 +7,5 @@ export class DocumentDto {
   type?: DocumentTypeDto;
   entityId?: number;
   entityType?: number;
+  photos?: string[];
 }

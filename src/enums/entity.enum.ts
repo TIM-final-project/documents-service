@@ -1,8 +1,8 @@
-export enum Entity {
-  ADMIN,
-  RESOURCE,
-  CONTRACTOR,
-  AUDITOR,
-  MANAGER,
-  SECURITY,
+export enum EntityEnum {
+  ADMINS,
+  DRIVERS,
+  CONTRACTORS,
+  AUDITORS,
+  MANAGERS,
+  SECURITIES,
 }
