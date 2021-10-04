@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Param } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { DocumentTypeDto } from './type.dto';
 import { TypesService } from './types.service';
 
 @Controller('types')
 export class TypesController {
+  private readonly logger = new Logger(TypesController.name);
+
   constructor(private typesService: TypesService) {}
 
   // @Get()
@@ -15,7 +17,8 @@ export class TypesController {
 
   // @Get(':entityId')
   @MessagePattern('types_find_by_entity')
-  async findByEntityType(@Body('entityType') entityType: number): Promise<DocumentTypeDto[]> {
+  async findByEntityType(entityType: number): Promise<DocumentTypeDto[]> {
+    this.logger.debug('Finding types by entity', { entityType });
     return this.typesService.findByEntity(entityType);
   }
 }
