@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-=======
 import { Injectable, Logger } from '@nestjs/common';
->>>>>>> develop
 import { InjectRepository } from '@nestjs/typeorm';
 import { DocumentTypeEntity } from 'src/types/type.entity';
 import { Repository } from 'typeorm';
@@ -30,7 +26,10 @@ export class DocumentsService {
   ) {}
 
   async findAll(query: documentRequestDto): Promise<DocumentDto[]> {
-    const where = query;
+    const where = {
+      ...query,
+      active: true
+    };
     const documents: DocumentEntity[] = await this.documentRepository.find({ 
       where,
       relations: ['type'] 
@@ -45,7 +44,7 @@ export class DocumentsService {
 
     }
 
-    return 
+    return documentDto;
   }
 
   async findOne(id: number): Promise<DocumentDto> {
