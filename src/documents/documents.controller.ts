@@ -54,10 +54,10 @@ export class DocumentsController {
     return this.documentsService.update(id, documentDto);
   }
 
-  @MessagePattern('documents_by_entity')
-  async findByEntity(dto: DocumentsByEntityDto): Promise<DocumentDto[]> {
-    console.log('DOCUMENTS BY ENTITY: ', { ...dto });
-    return this.documentsService.findByEntity(dto.id, dto.type);
-  }
+  // @MessagePattern('documents_by_entity')
+  // async findByEntity(dto: DocumentsByEntityDto): Promise<DocumentDto[]> {
+  //   console.log('DOCUMENTS BY ENTITY: ', { ...dto });
+  //   return this.documentsService.findByEntity(dto.id, dto.type);
+  // }
 
 }

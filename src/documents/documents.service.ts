@@ -42,7 +42,7 @@ export class DocumentsService {
 
     }
 
-    return documentDto;
+    return ;
   }
 
   async findOne(id: number): Promise<DocumentDto> {
