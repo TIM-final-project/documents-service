@@ -33,16 +33,19 @@ export class DocumentsService {
       relations: ['type'] 
     });
 
+    let documentsDto:DocumentDto[] = [];
+
     if(documents.length){
-      
+      this.logger.debug(documents.length + " documents where found")
       for (const document of documents) {
         let photos = await this.getPhoto(document.entityType, document.entityId, document.type.id);
-        let documentDto: DocumentDto = {...document, photos}        
+        let documentDto: DocumentDto = {...document, photos}
+        documentsDto.push(documentDto);
       }
 
     }
 
-    return ;
+    return documentsDto;
   }
 
   async findOne(id: number): Promise<DocumentDto> {
@@ -116,8 +119,6 @@ export class DocumentsService {
 
     let date = tts.toLocaleDateString().replace(/\//g,"-") + "T" + tts.toLocaleTimeString();
 
-    this.logger.debug(tts.toLocaleString());
-
     const path ='./photos/'+ entityTypeName.toLocaleLowerCase() + 
                 '/' + entityId + 
                 '/'+ documentType +
@@ -153,7 +154,6 @@ export class DocumentsService {
       throw new RpcException("No se encontro ningun archivo asociado al documento");
     }
 
-    this.logger.debug(dirs);
     dirs.sort();     
     path = path + `/${dirs[0]}`;
 
