@@ -31,7 +31,7 @@ export class DocumentsController {
     const { type } = documentDto;
     delete documentDto.type;
     
-
+    
     var photos: Array<string> = [];
     if(!documentDto.photos.length){
       throw new RpcException({message: "Es necesario cargar una foto asociada al documento."});

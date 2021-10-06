@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DocumentTypeEntity } from 'src/types/type.entity';
 import { Repository } from 'typeorm';
@@ -9,9 +9,7 @@ import * as fs from "fs";
 import { EntityEnum } from 'src/enums/entity.enum';
 import { RpcException } from '@nestjs/microservices';
 import { DocumentDto } from './dto/document.dto';
-import * as mmmagic from "promise-mmmagic";
-import { doc } from 'prettier';
-
+const mime = require('mime');
 
 @Injectable()
 export class DocumentsService {
@@ -142,8 +140,6 @@ export class DocumentsService {
 
   private async getPhoto(entityType: EntityEnum, entityId: number, documentType: number ): Promise<string[]>{
 
-    var magic = new mmmagic(mmmagic.MAGIC_MIME_TYPE);
-
     let entityTypeName = EntityEnum[entityType]
     
     let path ='./photos/'+ entityTypeName.toLocaleLowerCase() + 
@@ -172,12 +168,11 @@ export class DocumentsService {
     }
 
     for (const file of files) {
-      let mime = await magic
-        .detectFile(path + '/' + `${file}`)
+      let mimeType = mime.getType(path + '/' + `${file}`);
       
       let photo = fs.readFileSync(path + '/' + `${file}`, 'base64');
 
-      photo = "data:" + mime + ';base64,' + photo
+      photo = "data:" + mimeType + ';base64,' + photo
       
       photos.push(photo);
     }
