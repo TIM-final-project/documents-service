@@ -15,9 +15,10 @@ export class TypesService {
   }
 
   findByEntity(appliesTo: number): Promise<DocumentTypeEntity[]> {
-    return this.documentTypeRepository
-      .createQueryBuilder('type')
-      .where('type.appliesTo = :appliesTo', { appliesTo })
-      .getMany();
+    return this.documentTypeRepository.find({
+      where: {
+        appliesTo
+      }
+    });
   }
 }

@@ -4,6 +4,7 @@ import { DocumentTypeEntity } from 'src/types/type.entity';
 import { Repository } from 'typeorm';
 import { DocumentEntity } from './document.entity';
 import { CreateDocumentDto } from './dto/create-document.dto';
+import { documentRequestDto } from './dto/documents-request.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import * as fs from "fs";
 import { EntityEnum } from 'src/enums/entity.enum';
@@ -13,19 +14,24 @@ const mime = require('mime');
 
 @Injectable()
 export class DocumentsService {
-  private logger = new Logger(DocumentsService.name);
+  private readonly logger = new Logger(DocumentsService.name);
 
   constructor(
     @InjectRepository(DocumentEntity)
     private documentRepository: Repository<DocumentEntity>,
     @InjectRepository(DocumentTypeEntity)
-    private documentTypeRepository: Repository<DocumentTypeEntity>
+    private documentTypeRepository: Repository<DocumentTypeEntity>,
   ) {}
 
-
-  async findAll(): Promise<DocumentDto[]> {
-
-    const documents: DocumentEntity[] = await this.documentRepository.find({ relations: ["type"] });
+  async findAll(query: documentRequestDto): Promise<DocumentDto[]> {
+    const where = {
+      ...query,
+      active: true
+    };
+    const documents: DocumentEntity[] = await this.documentRepository.find({ 
+      where,
+      relations: ['type'] 
+    });
 
     if(documents.length){
       
@@ -36,7 +42,7 @@ export class DocumentsService {
 
     }
 
-    return 
+    return documentDto;
   }
 
   async findOne(id: number): Promise<DocumentDto> {
@@ -88,8 +94,7 @@ export class DocumentsService {
     id: number,
     documentDto: UpdateDocumentDto,
   ): Promise<DocumentEntity> {
-    const document: DocumentEntity =
-      await this.documentRepository.findOne(id);
+    const document: DocumentEntity = await this.documentRepository.findOne(id);
     this.documentRepository.merge(document, documentDto);
 
     if(!document.type){
@@ -103,16 +108,6 @@ export class DocumentsService {
     }
 
     return updatedDocument;
-  }
-
-  findByEntity(id: number, type: number): Promise<DocumentEntity[]> {
-    console.log('DOCUMENTS BY ENTITY: ', { id, type });
-    return this.documentRepository
-      .createQueryBuilder('document')
-      .innerJoin('document.type', 'type')
-      .where('document.entityId = :id', { id })
-      .andWhere('document.entityType = :type', { type })
-      .getMany();
   }
 
   private savePhotos(photos: Array<string>, entityType: EntityEnum, entityId: number, documentType: number, tts: Date){
