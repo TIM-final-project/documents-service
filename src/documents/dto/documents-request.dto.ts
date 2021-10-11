@@ -1,4 +1,4 @@
-export interface documentRequestDto {
-  entityId?: number,
-  entityType?: number,
+export class documentRequestDto {
+  entityId?: number;
+  entityType?: number;
 }

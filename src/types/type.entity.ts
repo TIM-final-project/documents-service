@@ -1,4 +1,5 @@
 import { DocumentEntity } from 'src/documents/document.entity';
+import { Severities } from 'src/enums/severities.enum';
 import {
   Column,
   Entity,
@@ -17,7 +18,11 @@ export class DocumentTypeEntity {
   @Column({ nullable: false })
   appliesTo: number;
 
-  @Column({ nullable: false })
+  @Column({ 
+    type: 'enum',
+    enum: Severities,
+    nullable: false
+  })
   severity: string;
 
   @OneToMany(() => DocumentEntity, document => document.type)

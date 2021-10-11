@@ -1,3 +1,4 @@
+import { States } from '../enums/states.enum';
 import { DocumentTypeEntity } from 'src/types/type.entity';
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
@@ -12,10 +13,12 @@ export class DocumentEntity {
   expirationDate: Date;
 
   @Column({
+    type: 'enum',
     nullable: false,
-    default: 0
+    enum: States,
+    default: States.PENDING
   })
-  state: number;
+  state?: States;
 
   @ManyToOne(() => DocumentTypeEntity, (type) => type.documents)
   type: DocumentTypeEntity;
