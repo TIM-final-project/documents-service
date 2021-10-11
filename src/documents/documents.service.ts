@@ -6,6 +6,11 @@ import { DocumentEntity } from './document.entity';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { documentRequestDto } from './dto/documents-request.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
+import * as fs from "fs";
+import { EntityEnum } from 'src/enums/entity.enum';
+import { RpcException } from '@nestjs/microservices';
+import { DocumentDto } from './dto/document.dto';
+const mime = require('mime');
 
 @Injectable()
 export class DocumentsService {
@@ -18,34 +23,74 @@ export class DocumentsService {
     private documentTypeRepository: Repository<DocumentTypeEntity>,
   ) {}
 
-  findAll(query: documentRequestDto): Promise<DocumentEntity[]> {
-    const where = query;
-    return this.documentRepository.find({ 
+  async findAll(query: documentRequestDto): Promise<DocumentDto[]> {
+    const where = {
+      ...query,
+      active: true
+    };
+    const documents: DocumentEntity[] = await this.documentRepository.find({ 
       where,
       relations: ['type'] 
     });
+
+    let documentsDto:DocumentDto[] = [];
+
+    if(documents.length){
+      this.logger.debug(documents.length + " documents where found")
+      for (const document of documents) {
+        let photos = await this.getPhoto(document.entityType, document.entityId, document.type.id);
+        let documentDto: DocumentDto = {...document, photos}
+        documentsDto.push(documentDto);
+      }
+
+    }
+
+    return documentsDto;
   }
 
-  findOne(id: number): Promise<DocumentEntity> {
-    return this.documentRepository.findOne(id, { relations: ['type'] });
+  async findOne(id: number): Promise<DocumentDto> {
+    const document: DocumentEntity = await this.documentRepository.findOne(id, { relations: ["type"] });
+
+    const photos: Array<string> = await this.getPhoto(document.entityType, document.entityId, document.type.id);
+
+    return {...document, photos };
   }
 
-  async create(
-    documentDto: CreateDocumentDto,
-    type: number,
-  ): Promise<DocumentEntity> {
-    this.logger.debug('DOCUMENTS SERVICE --- CREATING DOCUMENT ', {
-      documentDto,
-      type,
-    });
-    const documentType: DocumentTypeEntity =
-      await this.documentTypeRepository.findOne(type);
-    this.logger.debug('DOCUMENTS SERVICE --- TYPE: ', { documentType });
+  async create(documentDto: CreateDocumentDto, type: number, photos: Array<string>): Promise<DocumentEntity> {
+    const documentType: DocumentTypeEntity = await this.documentTypeRepository.findOne(type);
+
+    const documents: DocumentEntity[] = await this.documentRepository.find({
+      where: {
+        entityId: documentDto.entityId,
+        entityType: documentDto.entityType,
+        type: documentType,
+        active: true
+      }
+    })
+
+    if(documents.length){
+      //change active to false
+      if(documents.length > 1){
+        this.logger.warn("Two documents of the same type were found.");
+      }
+      documents.forEach(doc => {
+        doc.active = false
+      });
+      this.documentRepository.save(documents);
+    }
+
+
     const document: DocumentEntity = {
       ...documentDto,
       type: documentType,
     };
-    return this.documentRepository.save(document);
+
+    const documentCreated: DocumentEntity = await this.documentRepository.save(document);
+
+    this.savePhotos(photos, documentDto.entityType, documentDto.entityId, documentType.id, documentCreated.created_at);
+
+    
+    return documentCreated;
   }
 
   async update(
@@ -54,6 +99,81 @@ export class DocumentsService {
   ): Promise<DocumentEntity> {
     const document: DocumentEntity = await this.documentRepository.findOne(id);
     this.documentRepository.merge(document, documentDto);
-    return this.documentRepository.save(document);
+
+    if(!document.type){
+      throw new RpcException("No se encontro el tipo de documento.");
+    }
+
+    const updatedDocument: DocumentEntity = await this.documentRepository.save(document);
+
+    if(documentDto.photos.length){
+      this.savePhotos(documentDto.photos, document.entityType, document.entityId, document.type.id, updatedDocument.updated_at);
+    }
+
+    return updatedDocument;
   }
+
+  private savePhotos(photos: Array<string>, entityType: EntityEnum, entityId: number, documentType: number, tts: Date){
+
+    let entityTypeName = EntityEnum[entityType]
+
+    let date = tts.toLocaleDateString().replace(/\//g,"-") + "T" + tts.toLocaleTimeString();
+
+    const path ='./photos/'+ entityTypeName.toLocaleLowerCase() + 
+                '/' + entityId + 
+                '/'+ documentType +
+                '/' + date
+
+    if (!fs.existsSync(path)){
+      fs.mkdirSync(path, { recursive: true });
+    }
+    
+    photos.forEach((photo, i) => {
+      fs.writeFileSync(path + `/photo_${i}.png` , photo, {encoding: 'base64'});
+      
+    });
+  }
+
+  private async getPhoto(entityType: EntityEnum, entityId: number, documentType: number ): Promise<string[]>{
+
+    let entityTypeName = EntityEnum[entityType]
+    
+    let path ='./photos/'+ entityTypeName.toLocaleLowerCase() + 
+                '/' + entityId + 
+                '/'+ documentType ;
+
+    var photos: Array<string> = [];
+
+    if (!fs.existsSync(path)){
+      this.logger.debug(`path ${path} not found`);
+      throw new RpcException("No se encontro ningun archivo asociado al documento");
+    }
+
+    var dirs = fs.readdirSync(path);
+    if(!dirs.length){
+      throw new RpcException("No se encontro ningun archivo asociado al documento");
+    }
+
+    dirs.sort();     
+    path = path + `/${dirs[0]}`;
+
+    var files = fs.readdirSync(path);
+    if(!files.length){
+      throw new RpcException("No se encontro ningun archivo asociado al documento");
+    }
+
+    for (const file of files) {
+      let mimeType = mime.getType(path + '/' + `${file}`);
+      
+      let photo = fs.readFileSync(path + '/' + `${file}`, 'base64');
+
+      photo = "data:" + mimeType + ';base64,' + photo
+      
+      photos.push(photo);
+    }
+
+    return photos;
+
+  }
+
 }

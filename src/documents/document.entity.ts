@@ -1,5 +1,5 @@
 import { DocumentTypeEntity } from 'src/types/type.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class DocumentEntity {
@@ -13,6 +13,7 @@ export class DocumentEntity {
 
   @Column({
     nullable: false,
+    default: 0
   })
   state: number;
 
@@ -28,4 +29,15 @@ export class DocumentEntity {
     nullable: false
   })
   entityType: number;
+
+  @Column({ default: true })
+  active?: boolean;
+
+  @Column({ nullable: true })
+  @CreateDateColumn()
+  created_at?: Date;
+
+  @Column({ nullable: true })
+  @UpdateDateColumn()
+  updated_at?: Date;
 }
