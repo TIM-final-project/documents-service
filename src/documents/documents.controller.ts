@@ -1,11 +1,13 @@
 import {Controller, Logger} from '@nestjs/common';
 import { MessagePattern, RpcException } from '@nestjs/microservices';
+import { States } from 'src/enums/states.enum';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { DocumentDto } from './dto/document.dto';
 import { DocumentsByEntityDto } from './dto/documents-by-entity.dto';
 import { documentRequestDto } from './dto/documents-request.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
+import { updateInterface, updateState } from './interfaces/update.interface';
 
 @Controller('documents')
 export class DocumentsController {
@@ -47,11 +49,15 @@ export class DocumentsController {
 
   // @Put(':id')
   @MessagePattern('documents_update')
-  async update(documentDto: UpdateDocumentDto): Promise<DocumentDto> {
-    console.log('Update contractor request ', { ...documentDto });
-    const { id } = documentDto;
-    delete documentDto.id;
-    return this.documentsService.update(id, documentDto);
+  async update({ id, updateDocumentDto }: updateInterface): Promise<DocumentDto> {
+    this.logger.debug('Update contractor request ', { id, updateDocumentDto });
+    return this.documentsService.update(id, updateDocumentDto);
+  }
+
+  @MessagePattern('document_change_state')
+  async changeState({ id, state }: updateState): Promise<DocumentDto> {
+    this.logger.debug('Changing document state', { id, state });
+    return this.documentsService.updateState(id, state);
   }
 
 }
