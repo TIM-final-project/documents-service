@@ -6,11 +6,11 @@ import { DocumentEntity } from './document.entity';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { documentRequestDto } from './dto/documents-request.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
-import * as fs from "fs";
-import { EntityEnum } from 'src/enums/entity.enum';
 import { RpcException } from '@nestjs/microservices';
 import { DocumentDto } from './dto/document.dto';
-const mime = require('mime');
+import { getPhoto, savePhotos } from 'src/utils/photos';
+import { States } from 'src/enums/states.enum';
+import { isValidStateUpdate, statesTranslationArray } from 'src/utils/documents';
 
 @Injectable()
 export class DocumentsService {
@@ -38,7 +38,7 @@ export class DocumentsService {
     if(documents.length){
       this.logger.debug(documents.length + " documents where found")
       for (const document of documents) {
-        let photos = await this.getPhoto(document.entityType, document.entityId, document.type.id);
+        let photos = await getPhoto(document.entityType, document.entityId, document.type.id);
         let documentDto: DocumentDto = {...document, photos}
         documentsDto.push(documentDto);
       }
@@ -51,7 +51,7 @@ export class DocumentsService {
   async findOne(id: number): Promise<DocumentDto> {
     const document: DocumentEntity = await this.documentRepository.findOne(id, { relations: ["type"] });
 
-    const photos: Array<string> = await this.getPhoto(document.entityType, document.entityId, document.type.id);
+    const photos: Array<string> = await getPhoto(document.entityType, document.entityId, document.type.id);
 
     return {...document, photos };
   }
@@ -87,8 +87,7 @@ export class DocumentsService {
 
     const documentCreated: DocumentEntity = await this.documentRepository.save(document);
 
-    this.savePhotos(photos, documentDto.entityType, documentDto.entityId, documentType.id, documentCreated.created_at);
-
+    savePhotos(photos, documentDto.entityType, documentDto.entityId, documentType.id, documentCreated.created_at);
     
     return documentCreated;
   }
@@ -106,74 +105,30 @@ export class DocumentsService {
 
     const updatedDocument: DocumentEntity = await this.documentRepository.save(document);
 
-    if(documentDto.photos.length){
-      this.savePhotos(documentDto.photos, document.entityType, document.entityId, document.type.id, updatedDocument.updated_at);
+    if(documentDto.photos?.length) {
+      savePhotos(documentDto.photos, document.entityType, document.entityId, document.type.id, updatedDocument.updated_at);
     }
 
     return updatedDocument;
   }
 
-  private savePhotos(photos: Array<string>, entityType: EntityEnum, entityId: number, documentType: number, tts: Date){
-
-    let entityTypeName = EntityEnum[entityType]
-
-    let date = tts.toLocaleDateString().replace(/\//g,"-") + "T" + tts.toLocaleTimeString();
-
-    const path ='./photos/'+ entityTypeName.toLocaleLowerCase() + 
-                '/' + entityId + 
-                '/'+ documentType +
-                '/' + date
-
-    if (!fs.existsSync(path)){
-      fs.mkdirSync(path, { recursive: true });
+  async updateState(
+    id: number, 
+    state: States
+  ): Promise<DocumentEntity> {
+    const document: DocumentEntity = await this.documentRepository.findOne(id);
+    if (document) {
+      if (isValidStateUpdate(document.state, state)) {
+        this.documentRepository.merge(document, { state });
+        return await this.documentRepository.save(document);
+      } else {
+        this.logger.error(`Error updating document State, invalid state update: ${document.state} to ${state}`);
+      throw new RpcException({ message: `No es posible cambiar un documento del estado ${statesTranslationArray[document.state]} a ${statesTranslationArray[state]}` });
+      }
+    } else {
+      this.logger.error('Error updating document State, no document with id: ', id);
+      throw new RpcException({ message: `No exite un documento con el id: ${id}` });
     }
-    
-    photos.forEach((photo, i) => {
-      fs.writeFileSync(path + `/photo_${i}.png` , photo, {encoding: 'base64'});
-      
-    });
-  }
-
-  private async getPhoto(entityType: EntityEnum, entityId: number, documentType: number ): Promise<string[]>{
-
-    let entityTypeName = EntityEnum[entityType]
-    
-    let path ='./photos/'+ entityTypeName.toLocaleLowerCase() + 
-                '/' + entityId + 
-                '/'+ documentType ;
-
-    var photos: Array<string> = [];
-
-    if (!fs.existsSync(path)){
-      this.logger.debug(`path ${path} not found`);
-      throw new RpcException("No se encontro ningun archivo asociado al documento");
-    }
-
-    var dirs = fs.readdirSync(path);
-    if(!dirs.length){
-      throw new RpcException("No se encontro ningun archivo asociado al documento");
-    }
-
-    dirs.sort();     
-    path = path + `/${dirs[0]}`;
-
-    var files = fs.readdirSync(path);
-    if(!files.length){
-      throw new RpcException("No se encontro ningun archivo asociado al documento");
-    }
-
-    for (const file of files) {
-      let mimeType = mime.getType(path + '/' + `${file}`);
-      
-      let photo = fs.readFileSync(path + '/' + `${file}`, 'base64');
-
-      photo = "data:" + mimeType + ';base64,' + photo
-      
-      photos.push(photo);
-    }
-
-    return photos;
-
   }
 
 }
