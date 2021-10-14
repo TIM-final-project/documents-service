@@ -19,6 +19,7 @@ export class DocumentsController {
   // @Get()
   @MessagePattern('documents_find_all')
   async findAll(query: documentRequestDto): Promise<DocumentDto[]> {
+    this.logger.debug('Getting All Documents', { query });
     return this.documentsService.findAll(query);
   }
 

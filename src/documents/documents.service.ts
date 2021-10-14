@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DocumentTypeEntity } from 'src/types/type.entity';
-import { Repository } from 'typeorm';
+import { Between, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import { DocumentEntity } from './document.entity';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { documentRequestDto } from './dto/documents-request.dto';
@@ -11,6 +11,8 @@ import { DocumentDto } from './dto/document.dto';
 import { getPhoto, savePhotos } from 'src/utils/photos';
 import { States } from 'src/enums/states.enum';
 import { isValidStateUpdate, statesTranslationArray } from 'src/utils/documents';
+import { DocumentQuery } from './interfaces/document-query.interface';
+import e from 'cors';
 
 @Injectable()
 export class DocumentsService {
@@ -23,11 +25,34 @@ export class DocumentsService {
     private documentTypeRepository: Repository<DocumentTypeEntity>,
   ) {}
 
-  async findAll(query: documentRequestDto): Promise<DocumentDto[]> {
-    const where = {
-      ...query,
-      active: true
+  async findAll({
+    entityId,
+    entityType,
+    before,
+    after
+  }: documentRequestDto): Promise<DocumentDto[]> {
+    let where: DocumentQuery = {
+      active: true,
     };
+
+    this.logger.debug('All Documents', { entityId, entityType, before, after });
+    
+    if (!!entityId) {
+      where.entityId = entityId;
+    }
+
+    if (!!entityType) {
+      where.entityType = entityType;
+    }
+
+    if (!!before && !!after) {
+      where.expirationDate = Between(new Date(after).toISOString(), new Date(before).toISOString());
+    } else if (!!after) {
+      where.expirationDate = MoreThanOrEqual(new Date(after).toISOString());
+    } else if (!!before) {
+      where.expirationDate = LessThanOrEqual(new Date(before).toISOString());
+    }
+    this.logger.debug({ where });
     const documents: DocumentEntity[] = await this.documentRepository.find({ 
       where,
       relations: ['type'] 
@@ -45,7 +70,7 @@ export class DocumentsService {
 
     }
 
-    return documentsDto;
+    return documents;
   }
 
   async findOne(id: number): Promise<DocumentDto> {
