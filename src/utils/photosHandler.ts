@@ -68,3 +68,18 @@ export async function getPhoto(entityType: EntityEnum, entityId: number, documen
   return photos;
 
 }
+
+export function isBase64(str: string) {
+  if (str ==='' || str.trim() ===''){ return false; }
+
+  return Buffer.from(str, 'base64').toString('base64') === str
+}
+
+export function isValidFormat(str: string) {
+  if (str === '' || str.trim() ===''){ return false; }
+  str = str.replace("data:","").replace(";base64","");
+  logger.debug(`photo format: ${str}`)
+  const validFormats = ["image/jpg", "image/jpeg", "application/pdf", "image/png"]
+
+  return validFormats.includes(str);
+}

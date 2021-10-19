@@ -1,12 +1,9 @@
 import {Controller, Logger} from '@nestjs/common';
 import { MessagePattern, RpcException } from '@nestjs/microservices';
-import { States } from 'src/enums/states.enum';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { DocumentDto } from './dto/document.dto';
-import { DocumentsByEntityDto } from './dto/documents-by-entity.dto';
 import { documentRequestDto } from './dto/documents-request.dto';
-import { UpdateDocumentDto } from './dto/update-document.dto';
 import { updateInterface, updateState } from './interfaces/update.interface';
 
 @Controller('documents')
@@ -35,23 +32,23 @@ export class DocumentsController {
     const { type } = documentDto;
     delete documentDto.type;
     
-    
     var photos: Array<string> = [];
+    var mimes: Array<string> = [];
     if(!documentDto.photos.length){
       throw new RpcException({message: "Es necesario cargar una foto asociada al documento."});
     }
 
     documentDto.photos.forEach(photo => {
+      mimes.push(photo.substring(0,photo.indexOf(",")));
       photos.push(photo.substring(photo.indexOf(",") + 1));
     });
 
-    return this.documentsService.create(documentDto, type, photos);
+    return this.documentsService.create(documentDto, type, photos, mimes);
   }
 
   // @Put(':id')
   @MessagePattern('documents_update')
   async update({ id, updateDocumentDto }: updateInterface): Promise<DocumentDto> {
-    this.logger.debug('Update contractor request ', { id, updateDocumentDto });
     return this.documentsService.update(id, updateDocumentDto);
   }
 
