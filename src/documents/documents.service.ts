@@ -13,6 +13,9 @@ import { States } from 'src/enums/states.enum';
 import { isValidStateUpdate, statesTranslationArray } from 'src/utils/documents';
 import { DocumentQuery } from './interfaces/document-query.interface';
 import { EntityEnum } from 'src/enums/entity.enum';
+import { Severities } from 'dist/enums/severities.enum';
+import { type } from 'os';
+import { ValidDocumentDTO } from './dto/valid-document.dto';
 
 @Injectable()
 export class DocumentsService {
@@ -70,7 +73,7 @@ export class DocumentsService {
 
     }
 
-    return documents;
+    return documentsDto;
   }
 
   async findOne(id: number): Promise<DocumentDto> {
@@ -175,7 +178,7 @@ export class DocumentsService {
     if (document) {
       if (isValidStateUpdate(document.state, state)) {
         this.documentRepository.merge(document, { state });
-        return await this.documentRepository.save(document);
+        return this.documentRepository.save(document);
       } else {
         this.logger.error(`Error updating document State, invalid state update: ${document.state} to ${state}`);
         throw new RpcException({ message: `No es posible cambiar un documento del estado ${statesTranslationArray[document.state]} a ${statesTranslationArray[state]}` });
@@ -184,6 +187,43 @@ export class DocumentsService {
       this.logger.error('Error updating document State, no document with id: ', id);
       throw new RpcException({ message: `No exite un documento con el id: ${id}` });
     }
+  }
+
+  async validateEntityDocuments(entityId: number, entityType: number): Promise<ValidDocumentDTO> {
+
+    const types: DocumentTypeEntity[] = await this.documentTypeRepository.find({
+      where: {
+        appliesTo: entityType
+      }
+    })
+
+    const typesIds = types.map(t => t.id)
+
+    const documents: DocumentEntity[] = await this.documentRepository.find({
+      where: {
+        entityId,
+        entityType
+      },
+      relations: ["types"]
+    })
+
+    let isValid = true;
+    const missingDocuments = []
+    typesIds.forEach(tid => {
+      if(documents.findIndex(d => d.type.id === tid) == -1){
+        missingDocuments.push(types.find(t => t.id == tid));
+      }
+    });
+
+    if(missingDocuments.length){
+      isValid = false;
+    }
+
+    return {
+      isValid: isValid,
+      missingDocuments: missingDocuments,
+      entityDocuments: documents
+    }   
   }
 
   private isDateBeforeToday(date: Date) {

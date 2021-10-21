@@ -1,9 +1,11 @@
 import {Controller, Logger} from '@nestjs/common';
 import { MessagePattern, RpcException } from '@nestjs/microservices';
+import { EntityEnum } from 'dist/enums/entity.enum';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { DocumentDto } from './dto/document.dto';
 import { documentRequestDto } from './dto/documents-request.dto';
+import { ValidDocumentDTO } from './dto/valid-document.dto';
 import { updateInterface, updateState } from './interfaces/update.interface';
 
 @Controller('documents')
@@ -57,5 +59,11 @@ export class DocumentsController {
     this.logger.debug('Changing document state', { id, state });
     return this.documentsService.updateState(id, state);
   }
+
+  @MessagePattern('validate_entity_documents')
+  async validateEntityDocuments(entityId: number, entityType: EntityEnum): Promise<ValidDocumentDTO>{
+    this.logger.debug('Validating entity documents');
+    return this.documentsService.validateEntityDocuments(entityId, entityType);
+  } 
 
 }
