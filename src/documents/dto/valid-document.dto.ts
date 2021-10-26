@@ -1,5 +1,5 @@
-import { DocumentDto } from "dist/documents/dto/document.dto"
 import { DocumentTypeDto } from "src/types/type.dto"
+import { DocumentDto } from "./document.dto";
 
 export class ValidDocumentDTO{
     isValid: boolean;

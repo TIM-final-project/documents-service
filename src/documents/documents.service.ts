@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DocumentTypeEntity } from 'src/types/type.entity';
-import { Between, getConnection, LessThanOrEqual, MoreThanOrEqual, Repository, Transaction } from 'typeorm';
+import { Between, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import { DocumentEntity } from './document.entity';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { documentRequestDto } from './dto/documents-request.dto';
@@ -13,8 +13,6 @@ import { States } from 'src/enums/states.enum';
 import { isValidStateUpdate, statesTranslationArray } from 'src/utils/documents';
 import { DocumentQuery } from './interfaces/document-query.interface';
 import { EntityEnum } from 'src/enums/entity.enum';
-import { Severities } from 'dist/enums/severities.enum';
-import { type } from 'os';
 import { ValidDocumentDTO } from './dto/valid-document.dto';
 
 @Injectable()
@@ -204,7 +202,7 @@ export class DocumentsService {
         entityId,
         entityType
       },
-      relations: ["types"]
+      relations: ["type"]
     })
 
     let isValid = true;
