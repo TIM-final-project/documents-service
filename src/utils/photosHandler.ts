@@ -6,7 +6,7 @@ const mime = require('mime');
 
 const logger = new Logger('Photos Utils');
 
-export function savePhotos(photos: Array<string>, entityType: EntityEnum, entityId: number, documentType: number, tts: Date){
+export function savePhotos(photos: Array<string>, mimes: Array<string>, entityType: EntityEnum, entityId: number, documentType: number, tts: Date){
 
   let entityTypeName = EntityEnum[entityType]
 
@@ -21,10 +21,12 @@ export function savePhotos(photos: Array<string>, entityType: EntityEnum, entity
     fs.mkdirSync(path, { recursive: true });
   }
   
-  photos.forEach((photo, i) => {
-    fs.writeFileSync(path + `/photo_${i}.png` , photo, {encoding: 'base64'});
-    
-  });
+  if(mimes.length == photos.length){
+    photos.forEach((photo, i) => {
+      let mime = mimes[i].substring(mimes[i].indexOf("/")+1,mimes[i].indexOf(";"));
+      fs.writeFileSync(path + `/photo_${i}.${mime}`, photo, {encoding: 'base64'});
+    });
+  }
 }
 
 export async function getPhoto(entityType: EntityEnum, entityId: number, documentType: number ): Promise<string[]>{
