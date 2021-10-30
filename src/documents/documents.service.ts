@@ -29,14 +29,18 @@ export class DocumentsService {
     entityId,
     entityType,
     before,
-    after
+    after,
+    state
   }: documentRequestDto): Promise<DocumentDto[]> {
     let where: DocumentQuery = {
       active: true,
     };
 
-    this.logger.debug('All Documents', { entityId, entityType, before, after });
+    this.logger.debug('All Documents', { entityId, entityType, before, after, state });
     
+    if(!!state) {
+      where.state = state;
+    }
     if (!!entityId) {
       where.entityId = entityId;
     }

@@ -1,6 +1,9 @@
+import { States } from "src/enums/states.enum";
+
 export interface documentRequestDto {
   entityId?: number,
   entityType?: number,
   before?: Date,
   after?: Date,
+  state: States
 }
