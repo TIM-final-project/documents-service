@@ -49,7 +49,17 @@ export class DocumentsController {
   // @Put(':id')
   @MessagePattern('documents_update')
   async update({ id, updateDocumentDto }: updateInterface): Promise<DocumentDto> {
-    return this.documentsService.update(id, updateDocumentDto);
+
+    var photos: Array<string> = [];
+    var mimes: Array<string> = [];
+    if(updateDocumentDto.photos?.length){
+      updateDocumentDto.photos.forEach(photo => {
+        mimes.push(photo.substring(0,photo.indexOf(",")));
+        photos.push(photo.substring(photo.indexOf(",") + 1));
+      });
+    }
+
+    return this.documentsService.update(id, updateDocumentDto, photos, mimes);
   }
 
   @MessagePattern('document_change_state')

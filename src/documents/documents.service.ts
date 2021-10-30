@@ -138,7 +138,7 @@ export class DocumentsService {
 
     const documentCreated: DocumentEntity = await this.documentRepository.save(document);
 
-    savePhotos(photos, documentDto.entityType, documentDto.entityId, documentType.id, documentCreated.created_at);
+    savePhotos(photos, mimes, documentDto.entityType, documentDto.entityId, documentType.id, documentCreated.created_at);
     
     return documentCreated;
   }
@@ -146,6 +146,8 @@ export class DocumentsService {
   async update(
     id: number,
     documentDto: UpdateDocumentDto,
+    photos: Array<string>,
+    mimes: Array<string>
   ): Promise<DocumentEntity> {
     const document: DocumentEntity = await this.documentRepository.findOne(id, { relations: ["type"] });
 
@@ -163,9 +165,9 @@ export class DocumentsService {
 
     const updatedDocument: DocumentEntity = await this.documentRepository.save(document);
 
-    if(documentDto.photos?.length) {
+    if(photos.length) {
       this.logger.debug(JSON.stringify(document));
-      savePhotos(documentDto.photos, document.entityType, document.entityId, document.type.id, updatedDocument.updated_at);
+      savePhotos(photos, mimes, document.entityType, document.entityId, document.type.id, updatedDocument.updated_at);
     }
 
     return updatedDocument;
@@ -179,7 +181,7 @@ export class DocumentsService {
     if (document) {
       if (isValidStateUpdate(document.state, state)) {
         this.documentRepository.merge(document, { state });
-        return await this.documentRepository.save(document);
+        return this.documentRepository.save(document);
       } else {
         this.logger.error(`Error updating document State, invalid state update: ${document.state} to ${state}`);
         throw new RpcException({ message: `No es posible cambiar un documento del estado ${statesTranslationArray[document.state]} a ${statesTranslationArray[state]}` });
