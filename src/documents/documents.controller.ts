@@ -34,6 +34,7 @@ export class DocumentsController {
     
     var photos: Array<string> = [];
     var mimes: Array<string> = [];
+    
     if(!documentDto.photos.length){
       throw new RpcException({message: "Es necesario cargar una foto asociada al documento."});
     }

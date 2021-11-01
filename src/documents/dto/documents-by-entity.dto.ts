@@ -1,4 +1,4 @@
-export interface DocumentsByEntityDto {
-  id: number,
-  type: number
+export class DocumentsByEntityDto {
+  id: number;
+  type: number;
 }
