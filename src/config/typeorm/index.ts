@@ -12,7 +12,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
 			synchronize: true,
             autoLoadEntities: true,
 			keepConnectionAlive: true,
-			logging: true
+			logging: ["query"]
 		};
 	}
 }

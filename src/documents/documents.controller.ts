@@ -3,9 +3,8 @@ import { MessagePattern, RpcException } from '@nestjs/microservices';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { DocumentDto } from './dto/document.dto';
-import { DocumentsByEntityDto } from './dto/documents-by-entity.dto';
 import { documentRequestDto } from './dto/documents-request.dto';
-import { UpdateDocumentDto } from './dto/update-document.dto';
+import { updateInterface, updateState } from './interfaces/update.interface';
 
 @Controller('documents')
 export class DocumentsController {
@@ -17,6 +16,7 @@ export class DocumentsController {
   // @Get()
   @MessagePattern('documents_find_all')
   async findAll(query: documentRequestDto): Promise<DocumentDto[]> {
+    this.logger.debug('Getting All Documents', { query });
     return this.documentsService.findAll(query);
   }
 
@@ -32,26 +32,41 @@ export class DocumentsController {
     const { type } = documentDto;
     delete documentDto.type;
     
-    
     var photos: Array<string> = [];
-    if(!documentDto.photos?.length){
+    var mimes: Array<string> = [];
+    
+    if(!documentDto.photos.length){
       throw new RpcException({message: "Es necesario cargar una foto asociada al documento."});
     }
 
     documentDto.photos.forEach(photo => {
+      mimes.push(photo.substring(0,photo.indexOf(",")));
       photos.push(photo.substring(photo.indexOf(",") + 1));
     });
 
-    return this.documentsService.create(documentDto, type, photos);
+    return this.documentsService.create(documentDto, type, photos, mimes);
   }
 
   // @Put(':id')
   @MessagePattern('documents_update')
-  async update(documentDto: UpdateDocumentDto): Promise<DocumentDto> {
-    console.log('Update contractor request ', { ...documentDto });
-    const { id } = documentDto;
-    delete documentDto.id;
-    return this.documentsService.update(id, documentDto);
+  async update({ id, updateDocumentDto }: updateInterface): Promise<DocumentDto> {
+
+    var photos: Array<string> = [];
+    var mimes: Array<string> = [];
+    if(updateDocumentDto.photos?.length){
+      updateDocumentDto.photos.forEach(photo => {
+        mimes.push(photo.substring(0,photo.indexOf(",")));
+        photos.push(photo.substring(photo.indexOf(",") + 1));
+      });
+    }
+
+    return this.documentsService.update(id, updateDocumentDto, photos, mimes);
+  }
+
+  @MessagePattern('document_change_state')
+  async changeState({ id, state }: updateState): Promise<DocumentDto> {
+    this.logger.debug('Changing document state', { id, state });
+    return this.documentsService.updateState(id, state);
   }
 
 }

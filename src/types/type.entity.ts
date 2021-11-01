@@ -26,5 +26,5 @@ export class DocumentTypeEntity {
   severity: string;
 
   @OneToMany(() => DocumentEntity, document => document.type)
-  documents: DocumentEntity[]
+  documents: DocumentEntity[];
 }
