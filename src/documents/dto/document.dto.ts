@@ -8,4 +8,7 @@ export class DocumentDto {
   entityId?: number;
   entityType?: number;
   photos?: string[];
+  contractorId?: number;
+  comment?: string;
+  auditorUuid?: string;
 }

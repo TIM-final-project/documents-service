@@ -5,5 +5,6 @@ export interface documentRequestDto {
   entityType?: number,
   before?: Date,
   after?: Date,
-  state: States
+  state: States,
+  contractorId?: number,
 }

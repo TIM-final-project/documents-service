@@ -3,5 +3,6 @@ export class CreateDocumentDto {
   type: number;
   entityId: number;
   entityType: number;
+  contractorId: number;
   photos?: [string];
 }
