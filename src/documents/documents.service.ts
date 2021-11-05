@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DocumentTypeEntity } from 'src/types/type.entity';
-import { Between, getConnection, LessThanOrEqual, MoreThanOrEqual, Repository, Transaction } from 'typeorm';
+import { Between, LessThanOrEqual, MoreThanOrEqual, Repository} from 'typeorm';
 import { DocumentEntity } from './document.entity';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { documentRequestDto } from './dto/documents-request.dto';
@@ -58,7 +58,7 @@ export class DocumentsService {
       relations: ['type'] 
     });
 
-    let documentsDto:DocumentDto[] = [];
+    let documentsDto: DocumentDto[] = [];
 
     if(documents.length){
       this.logger.debug(documents.length + " documents where found")
@@ -70,7 +70,7 @@ export class DocumentsService {
 
     }
 
-    return documents;
+    return documentsDto;
   }
 
   async findOne(id: number): Promise<DocumentDto> {
