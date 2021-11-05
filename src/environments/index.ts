@@ -20,12 +20,12 @@ const typeorm_default = {
 const typeorm_conf = {
   dev: {
     ...typeorm_default,
-    syncronize: true,
+    synchronize: true,
     logging: true,
   },
   production: {
     ...typeorm_default,
-    syncronize: false,
+    synchronize: false,
     logging: false,
   },
 };
