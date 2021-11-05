@@ -4,5 +4,5 @@ COPY package*.json ./
 RUN npm i -g @nestjs/cli
 RUN npm install
 COPY . .
-EXPOSE 3000
+EXPOSE 3003
 CMD [ "npm", "run", "start" ]

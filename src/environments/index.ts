@@ -3,22 +3,34 @@ import * as dotenv from 'dotenv'
 dotenv.config()
 
 // environment
-const NODE_ENV: string = process.env.NODE_ENV || 'local'
+const NODE_ENV: string = process.env.NODE_ENV || 'dev'
 
 //application
-const PORT: number = +process.env.PORT || 14047
+const PORT: number = +process.env.PORT || 3003
 
 // typeorm
-const environment = {
-    local: {
-        host: process.env.MYSQL_HOST,
-        port: process.env.MYSQL_PORT,
-        username: process.env.MYSQL_USERNAME,
-        password: process.env.MYSQL_PASSWORD,
-        database: process.env.MYSQL_DATABASE
-    }
+const typeorm_default = {
+    host: process.env.MYSQL_HOST,
+    port: process.env.MYSQL_PORT,
+    username: process.env.MYSQL_USERNAME,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE,
 }
-const TYPEORM = environment[NODE_ENV]
+
+const typeorm_conf = {
+  dev: {
+    ...typeorm_default,
+    syncronize: true,
+    logging: true,
+  },
+  production: {
+    ...typeorm_default,
+    syncronize: false,
+    logging: false,
+  },
+};
+
+const TYPEORM = typeorm_conf[NODE_ENV];
 
 export {
     NODE_ENV,
