@@ -8,5 +8,7 @@ export interface updateInterface {
 
 export interface updateState {
   id: number,
-  state: States
+  state: States,
+  comment: string,
+  auditorUuid: string,
 } 

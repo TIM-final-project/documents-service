@@ -33,6 +33,21 @@ export class DocumentEntity {
   })
   entityType: number;
 
+  @Column({
+    nullable: false
+  })
+  contractorId: number;
+
+  @Column({
+    nullable: true
+  })
+  comment?: string;
+
+  @Column({
+    nullable: true
+  })
+  auditorUuid?: string;
+
   @Column({ default: true })
   active?: boolean;
 
