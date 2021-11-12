@@ -105,7 +105,7 @@ export class DocumentsService {
       }
     }
 
-    return documents;
+    return documentsDto;
   }
 
   async findOne(id: number): Promise<DocumentDto> {
