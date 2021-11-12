@@ -5,4 +5,5 @@ export enum EntityEnum {
   AUDITORS,
   MANAGERS,
   SECURITIES,
+  VEHICLES
 }
