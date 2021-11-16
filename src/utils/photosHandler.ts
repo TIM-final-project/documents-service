@@ -50,7 +50,7 @@ export async function getPhoto(entityType: EntityEnum, entityId: number, documen
   }
 
   dirs.sort();     
-  path = path + `/${dirs[0]}`;
+  path = path + `/${dirs[dirs.length-1]}`;
 
   var files = fs.readdirSync(path);
   if(!files.length){
