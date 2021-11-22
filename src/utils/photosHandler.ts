@@ -23,8 +23,8 @@ export function savePhotos(photos: Array<string>, mimes: Array<string>, entityTy
   
   if(mimes.length == photos.length){
     photos.forEach((photo, i) => {
-      let mime = mimes[i].substring(mimes[i].indexOf("/")+1,mimes[i].indexOf(";"));
-      fs.writeFileSync(path + `/photo_${i}.${mime}`, photo, {encoding: 'base64'});
+      let m = mimes[i].substring(mimes[i].indexOf("/")+1,mimes[i].indexOf(";"));
+      fs.writeFileSync(path + `/photo_${i}.${m}`, photo, {encoding: 'base64'});
     });
   }
 }

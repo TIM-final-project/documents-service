@@ -91,4 +91,19 @@ export class DocumentsController {
       });
     }
   }
+
+  @MessagePattern('documents_invalid')
+  async indicator({
+    contractorId,
+    entityType,
+  }): Promise<{invalidEntities: number[]}> {
+
+    const entities: Set<number> = await this.documentsService.getEntitiesWithInvalidOrMissingDocuments(contractorId, entityType);
+    
+    return {
+      invalidEntities: Array.from(entities)
+    }
+  }
+
+
 }

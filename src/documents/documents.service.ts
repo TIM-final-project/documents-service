@@ -3,11 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DocumentTypeEntity } from 'src/types/type.entity';
 import {
   Between,
-  getConnection,
   LessThanOrEqual,
   MoreThanOrEqual,
   Repository,
-  Transaction,
+  SelectQueryBuilder,
 } from 'typeorm';
 import { DocumentEntity } from './document.entity';
 import { CreateDocumentDto } from './dto/create-document.dto';
@@ -288,6 +287,43 @@ export class DocumentsService {
         message: `No exite un documento con el id: ${id}`,
       });
     }
+  }
+
+  async getEntitiesWithInvalidOrMissingDocuments(contractorId: number, entityType: number): Promise<Set<number>> {
+
+    const subQuery: SelectQueryBuilder<DocumentTypeEntity> = this.documentTypeRepository.createQueryBuilder("dte2")
+                          .select("COUNT(*)")
+                          .where("dte2.appliesTo = de.entityType");
+
+    const missingDocuments : DocumentEntity[] = await this.documentRepository.createQueryBuilder("de")
+                          .select("de.entityId")
+                          .addSelect("COUNT(*)", "cant")
+                          .innerJoin(DocumentTypeEntity,"dte", "dte.id = de.typeId")
+                          .where("de.contractorId = :contractorId", {
+                            contractorId: contractorId
+                          })
+                          .andWhere("de.entityType = :entityType", {
+                            entityType: entityType
+                          })
+                          .groupBy("de.entityId")
+                          .addGroupBy("de.entityType")
+                          .having("`cant` != (" + subQuery.getQuery() + ")").getMany();
+                          
+    
+    const invalidDocuments : DocumentEntity[] = await this.documentRepository.createQueryBuilder("de2")
+                          .select("de2.entityId")
+                          .distinct(true)
+                          .addSelect("de2.entityType")
+                          .where("de2.state != '" + States.ACCEPTED + "'")
+                          .andWhere("de2.contractorId = :contractorId", {
+                            contractorId: contractorId
+                          })
+                          .andWhere("de2.entityType = :entityType", {
+                            entityType: entityType
+                          }).getMany();
+
+    const entitiesIds = missingDocuments.map(d => d.entityId).concat(invalidDocuments.map(d => d.entityId));
+    return new Set(entitiesIds)
   }
 
   private isDateBeforeToday(date: Date) {
