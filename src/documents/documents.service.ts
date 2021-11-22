@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DocumentTypeEntity } from 'src/types/type.entity';
 import {
   Between,
+  getConnection,
   LessThanOrEqual,
   MoreThanOrEqual,
   Repository,
@@ -37,7 +38,7 @@ export class DocumentsService {
     private documentRepository: Repository<DocumentEntity>,
     @InjectRepository(DocumentTypeEntity)
     private documentTypeRepository: Repository<DocumentTypeEntity>,
-  ) {}
+  ) { }
 
   async findAll({
     entityId,
@@ -151,8 +152,7 @@ export class DocumentsService {
 
     if (documentType.appliesTo != documentDto.entityType) {
       this.logger.error(
-        `Error creating document, this document type (${
-          documentType.name
+        `Error creating document, this document type (${documentType.name
         }) isn't applicable to ${EntityEnum[documentDto.entityType]} type`,
       );
       throw new RpcException({
@@ -262,7 +262,7 @@ export class DocumentsService {
     return updatedDocument;
   }
 
-  async updateState(id: number, state: States, comment: string, auditorUuid: string ): Promise<DocumentEntity> {
+  async updateState(id: number, state: States, comment: string, auditorUuid: string): Promise<DocumentEntity> {
     const document: DocumentEntity = await this.documentRepository.findOne(id);
     if (document) {
       if (isValidStateUpdate(document.state, state)) {
@@ -273,9 +273,8 @@ export class DocumentsService {
           `Error updating document State, invalid state update: ${document.state} to ${state}`,
         );
         throw new RpcException({
-          message: `No es posible cambiar un documento del estado ${
-            statesTranslationArray[document.state]
-          } a ${statesTranslationArray[state]}`,
+          message: `No es posible cambiar un documento del estado ${statesTranslationArray[document.state]
+            } a ${statesTranslationArray[state]}`,
         });
       }
     } else {
@@ -292,36 +291,35 @@ export class DocumentsService {
   async getEntitiesWithInvalidOrMissingDocuments(contractorId: number, entityType: number): Promise<Set<number>> {
 
     const subQuery: SelectQueryBuilder<DocumentTypeEntity> = this.documentTypeRepository.createQueryBuilder("dte2")
-                          .select("COUNT(*)")
-                          .where("dte2.appliesTo = de.entityType");
+      .select("COUNT(*)")
+      .where("dte2.appliesTo = de.entityType");
 
-    const missingDocuments : DocumentEntity[] = await this.documentRepository.createQueryBuilder("de")
-                          .select("de.entityId")
-                          .addSelect("COUNT(*)", "cant")
-                          .innerJoin(DocumentTypeEntity,"dte", "dte.id = de.typeId")
-                          .where("de.contractorId = :contractorId", {
-                            contractorId: contractorId
-                          })
-                          .andWhere("de.entityType = :entityType", {
-                            entityType: entityType
-                          })
-                          .groupBy("de.entityId")
-                          .addGroupBy("de.entityType")
-                          .having("`cant` != (" + subQuery.getQuery() + ")").getMany();
-                          
+    const missingDocuments: any = await getConnection().createQueryBuilder()
+      .select("de.entityId","entityId")
+      .addSelect("COUNT(*)", "cant")
+      .from(DocumentEntity, "de")
+      .innerJoin(DocumentTypeEntity, "dte", "dte.id = de.typeId")
+      .where("de.contractorId = :contractorId", { contractorId })
+      .andWhere("de.entityType = :entityType", { entityType })
+      .groupBy("de.entityId")
+      .addGroupBy("de.entityType")
+      .having("`cant` != (" + subQuery.getQuery() + ")")
+      .getRawMany();
+
+    const invalidDocuments: DocumentEntity[] = await this.documentRepository.createQueryBuilder("de2")
+      .select("de2.entityId")
+      .distinct(true)
+      .addSelect("de2.entityType")
+      .where("de2.state != '" + States.ACCEPTED + "'")
+      .andWhere("de2.contractorId = :contractorId", {
+        contractorId: contractorId
+      })
+      .andWhere("de2.entityType = :entityType", {
+        entityType: entityType
+      }).getMany();
     
-    const invalidDocuments : DocumentEntity[] = await this.documentRepository.createQueryBuilder("de2")
-                          .select("de2.entityId")
-                          .distinct(true)
-                          .addSelect("de2.entityType")
-                          .where("de2.state != '" + States.ACCEPTED + "'")
-                          .andWhere("de2.contractorId = :contractorId", {
-                            contractorId: contractorId
-                          })
-                          .andWhere("de2.entityType = :entityType", {
-                            entityType: entityType
-                          }).getMany();
-
+    console.log(missingDocuments)
+    
     const entitiesIds = missingDocuments.map(d => d.entityId).concat(invalidDocuments.map(d => d.entityId));
     return new Set(entitiesIds)
   }
