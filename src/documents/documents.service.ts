@@ -288,40 +288,54 @@ export class DocumentsService {
     }
   }
 
-  async getEntitiesWithInvalidOrMissingDocuments(contractorId: number, entityType: number): Promise<Set<number>> {
+  async getDocumentsEntitiesIds(contractorId: number, entityType: number, states: States[], missing: boolean): Promise<number[]> {
 
-    const subQuery: SelectQueryBuilder<DocumentTypeEntity> = this.documentTypeRepository.createQueryBuilder("dte2")
-      .select("COUNT(*)")
-      .where("dte2.appliesTo = de.entityType");
+    const [missingDocuments, statesDocuments] = await Promise.all([
+      this.getMissing(missing, contractorId, entityType), 
+      this.getByState(states, contractorId, entityType)]
+    )
 
-    const missingDocuments: any = await getConnection().createQueryBuilder()
-      .select("de.entityId","entityId")
-      .addSelect("COUNT(*)", "cant")
-      .from(DocumentEntity, "de")
-      .innerJoin(DocumentTypeEntity, "dte", "dte.id = de.typeId")
-      .where("de.contractorId = :contractorId", { contractorId })
-      .andWhere("de.entityType = :entityType", { entityType })
-      .groupBy("de.entityId")
-      .addGroupBy("de.entityType")
-      .having("`cant` != (" + subQuery.getQuery() + ")")
-      .getRawMany();
+    console.log(missingDocuments);
+    console.log(statesDocuments);
 
-    const invalidDocuments: DocumentEntity[] = await this.documentRepository.createQueryBuilder("de2")
-      .select("de2.entityId")
-      .distinct(true)
-      .addSelect("de2.entityType")
-      .where("de2.state != '" + States.ACCEPTED + "'")
-      .andWhere("de2.contractorId = :contractorId", {
-        contractorId: contractorId
-      })
-      .andWhere("de2.entityType = :entityType", {
-        entityType: entityType
-      }).getMany();
-    
-    console.log(missingDocuments)
-    
-    const entitiesIds = missingDocuments.map(d => d.entityId).concat(invalidDocuments.map(d => d.entityId));
-    return new Set(entitiesIds)
+    const entitiesIds = missingDocuments.map(d => d.entityId).concat(statesDocuments.map(d => d.entityId));
+    return [...new Set(entitiesIds)]
+  }
+
+  private getMissing(missing: boolean, contractorId: number, entityType: number): Promise<any[]> {
+    if (missing) {
+      const subQuery: SelectQueryBuilder<DocumentTypeEntity> = this.documentTypeRepository.createQueryBuilder("dte2")
+        .select("COUNT(*)")
+        .where("dte2.appliesTo = de.entityType");
+
+      return getConnection().createQueryBuilder()
+        .select("de.entityId", "entityId")
+        .addSelect("COUNT(*)", "cant")
+        .from(DocumentEntity, "de")
+        .innerJoin(DocumentTypeEntity, "dte", "dte.id = de.typeId")
+        .where("de.contractorId = :contractorId", { contractorId })
+        .andWhere("de.entityType = :entityType", { entityType })
+        .groupBy("de.entityId")
+        .addGroupBy("de.entityType")
+        .having("`cant` != (" + subQuery.getQuery() + ")")
+        .getRawMany();
+    }
+    return Promise.resolve([]);
+  }
+
+  private getByState(states: States[], contractorId: number, entityType: number): Promise<any[]> {
+    if (states.length) {
+      return getConnection().createQueryBuilder()
+        .select("de2.entityId")
+        .distinct(true)
+        .addSelect("de2.entityType")
+        .from(DocumentEntity, "de2")
+        .where("de2.state in (:states)", { states })
+        .andWhere("de2.contractorId = :contractorId", { contractorId })
+        .andWhere("de2.entityType = :entityType", { entityType })
+        .getRawMany();
+    }
+    return Promise.resolve([]);
   }
 
   private isDateBeforeToday(date: Date) {
