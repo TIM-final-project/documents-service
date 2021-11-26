@@ -96,12 +96,14 @@ export class DocumentsController {
   async indicator({
     contractorId,
     entityType,
+    states,
+    missing
   }): Promise<{invalidEntities: number[]}> {
 
-    const entities: Set<number> = await this.documentsService.getEntitiesWithInvalidOrMissingDocuments(contractorId, entityType);
+    const entities: number[] = await this.documentsService.getDocumentsEntitiesIds(contractorId, entityType, states, missing);
     
     return {
-      invalidEntities: Array.from(entities)
+      invalidEntities: entities
     }
   }
 
