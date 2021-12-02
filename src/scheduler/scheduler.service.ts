@@ -12,19 +12,19 @@ export class SchedulerService {
     private documentsService: DocumentsService
   ){}
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleCron() {
     let ts = Date.now();
     let date = new Date(ts);
-    const documentsExpired: DocumentDto[] = await this.documentsService.findAll({after: date});
+    const documentsExpired: DocumentDto[] = await this.documentsService.findAll({before: date});
 
     documentsExpired.forEach(doc => {
         if(doc.state == States.ACCEPTED){
-            this.documentsService.updateState(doc.id, States.EXPIRED);
+            this.documentsService.updateState(doc.id, States.EXPIRED, "Documento caducado el dia " + date, "scheduler");
         }
 
         if(doc.state == States.PENDING){
-            this.documentsService.updateState(doc.id, States.REJECTED);
+            this.documentsService.updateState(doc.id, States.REJECTED, "Documento rechazado por vencimiento el dia " + date, "scheduler");
         }
     });
 
