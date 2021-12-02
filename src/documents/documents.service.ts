@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 import { DocumentEntity } from './document.entity';
 import { CreateDocumentDto } from './dto/create-document.dto';
-import { documentRequestDto } from './dto/documents-request.dto';
+import { DocumentRequestDto } from './dto/documents-request.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { RpcException } from '@nestjs/microservices';
 import { DocumentDto } from './dto/document.dto';
@@ -47,7 +47,7 @@ export class DocumentsService {
     after,
     state,
     contractorId,
-  }: documentRequestDto): Promise<DocumentDto[]> {
+  }: DocumentRequestDto): Promise<DocumentDto[]> {
     let where: DocumentQuery = {
       active: true,
     };

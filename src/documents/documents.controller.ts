@@ -3,7 +3,7 @@ import { MessagePattern, RpcException } from '@nestjs/microservices';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { DocumentDto } from './dto/document.dto';
-import { documentRequestDto } from './dto/documents-request.dto';
+import { DocumentRequestDto } from './dto/documents-request.dto';
 import { updateInterface, updateState } from './interfaces/update.interface';
 
 @Controller('documents')
@@ -14,7 +14,7 @@ export class DocumentsController {
 
   // @Get()
   @MessagePattern('documents_find_all')
-  async findAll(query: documentRequestDto): Promise<DocumentDto[]> {
+  async findAll(query: DocumentRequestDto): Promise<DocumentDto[]> {
     this.logger.debug('Getting All Documents', { query });
     return this.documentsService.findAll(query);
   }

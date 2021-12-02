@@ -1,10 +1,10 @@
 import { States } from "src/enums/states.enum";
 
-export interface documentRequestDto {
+export interface DocumentRequestDto {
   entityId?: number,
   entityType?: number,
   before?: Date,
   after?: Date,
-  state: States,
+  state?: States,
   contractorId?: number,
 }
