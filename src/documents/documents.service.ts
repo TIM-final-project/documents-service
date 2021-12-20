@@ -326,9 +326,9 @@ export class DocumentsService {
   private getByState(states: States[], contractorId: number, entityType: number): Promise<any[]> {
     if (states.length) {
       return getConnection().createQueryBuilder()
-        .select("de2.entityId")
+        .select("de2.entityId", "entityId")
         .distinct(true)
-        .addSelect("de2.entityType")
+        .addSelect("de2.entityType","entityType")
         .from(DocumentEntity, "de2")
         .where("de2.state in (:states)", { states })
         .andWhere("de2.contractorId = :contractorId", { contractorId })
