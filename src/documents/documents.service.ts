@@ -28,6 +28,7 @@ import {
 } from 'src/utils/documents';
 import { DocumentQuery } from './interfaces/document-query.interface';
 import { EntityEnum } from 'src/enums/entity.enum';
+import { ValidDocumentDTO } from './dto/valid-document.dto';
 
 @Injectable()
 export class DocumentsService {
@@ -336,6 +337,43 @@ export class DocumentsService {
         .getRawMany();
     }
     return Promise.resolve([]);
+  }
+
+  async validateEntityDocuments(entityId: number, entityType: number): Promise<ValidDocumentDTO> {
+
+    const types: DocumentTypeEntity[] = await this.documentTypeRepository.find({
+      where: {
+        appliesTo: entityType
+      }
+    })
+
+    const typesIds = types.map(t => t.id)
+
+    const documents: DocumentEntity[] = await this.documentRepository.find({
+      where: {
+        entityId,
+        entityType
+      },
+      relations: ["type"]
+    })
+
+    let isValid = true;
+    const missingDocuments = []
+    typesIds.forEach(tid => {
+      if(documents.findIndex(d => d.type.id === tid) == -1){
+        missingDocuments.push(types.find(t => t.id == tid));
+      }
+    });
+
+    if(missingDocuments.length){
+      isValid = false;
+    }
+
+    return {
+      isValid: isValid,
+      missingDocuments: missingDocuments,
+      entityDocuments: documents
+    }   
   }
 
   private isDateBeforeToday(date: Date) {

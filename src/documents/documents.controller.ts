@@ -4,6 +4,7 @@ import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { DocumentDto } from './dto/document.dto';
 import { DocumentRequestDto } from './dto/documents-request.dto';
+import { ValidDocumentDTO } from './dto/valid-document.dto';
 import { updateInterface, updateState } from './interfaces/update.interface';
 
 @Controller('documents')
@@ -107,5 +108,10 @@ export class DocumentsController {
     }
   }
 
+  @MessagePattern('validate_entity_documents')
+  async validateEntityDocuments({entityId, entityType}): Promise<ValidDocumentDTO>{
+    this.logger.debug('Validating entity documents');
+    return this.documentsService.validateEntityDocuments(entityId, entityType);
+  } 
 
 }
