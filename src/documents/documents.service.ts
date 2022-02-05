@@ -386,6 +386,7 @@ export class DocumentsService {
       where: {
         entityId,
         entityType,
+        active: true,
       },
       relations: ['type'],
     });
