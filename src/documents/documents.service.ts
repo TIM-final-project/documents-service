@@ -313,9 +313,9 @@ export class DocumentsService {
         .select("de.entityId", "entityId")
         .addSelect("COUNT(*)", "cant")
         .from(DocumentEntity, "de")
-        .innerJoin(DocumentTypeEntity, "dte", "dte.id = de.typeId")
         .where("de.contractorId = :contractorId", { contractorId })
         .andWhere("de.entityType = :entityType", { entityType })
+        .andWhere("de.active = TRUE")
         .groupBy("de.entityId")
         .addGroupBy("de.entityType")
         .having("`cant` != (" + subQuery.getQuery() + ")")
@@ -334,6 +334,7 @@ export class DocumentsService {
         .where("de2.state in (:states)", { states })
         .andWhere("de2.contractorId = :contractorId", { contractorId })
         .andWhere("de2.entityType = :entityType", { entityType })
+        .andWhere("de2.active = TRUE ")
         .getRawMany();
     }
     return Promise.resolve([]);
