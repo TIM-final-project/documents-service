@@ -23,7 +23,7 @@ export class DocumentTypeEntity {
     enum: Severities,
     nullable: false
   })
-  severity: string;
+  severity: Severities;
 
   @OneToMany(() => DocumentEntity, document => document.type)
   documents: DocumentEntity[];

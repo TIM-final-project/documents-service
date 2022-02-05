@@ -32,8 +32,8 @@ export class DocumentsController {
     const { type } = documentDto;
     delete documentDto.type;
 
-    var photos: Array<string> = [];
-    var mimes: Array<string> = [];
+    const photos: Array<string> = [];
+    const mimes: Array<string> = [];
 
     if (!documentDto.photos.length) {
       throw new RpcException({
@@ -55,8 +55,8 @@ export class DocumentsController {
     id,
     updateDocumentDto,
   }: updateInterface): Promise<DocumentDto> {
-    var photos: Array<string> = [];
-    var mimes: Array<string> = [];
+    const photos: Array<string> = [];
+    const mimes: Array<string> = [];
     if (updateDocumentDto.photos?.length) {
       updateDocumentDto.photos.forEach((photo) => {
         mimes.push(photo.substring(0, photo.indexOf(',')));
@@ -81,11 +81,11 @@ export class DocumentsController {
       auditorUuid,
     });
 
-    if(comment?.length) {
+    if (comment?.length) {
       return this.documentsService.updateState(id, state, comment, auditorUuid);
     } else {
       this.logger.error(
-        'Error auditing document, comment cannot be an empty string'
+        'Error auditing document, comment cannot be an empty string',
       );
       throw new RpcException({
         message: `Debe escribir un comentario sobre la auditoria.`,
@@ -98,20 +98,27 @@ export class DocumentsController {
     contractorId,
     entityType,
     states,
-    missing
-  }): Promise<{invalidEntities: number[]}> {
+    missing,
+  }): Promise<{ invalidEntities: number[] }> {
+    const entities: number[] =
+      await this.documentsService.getDocumentsEntitiesIds(
+        contractorId,
+        entityType,
+        states,
+        missing,
+      );
 
-    const entities: number[] = await this.documentsService.getDocumentsEntitiesIds(contractorId, entityType, states, missing);
-    
     return {
-      invalidEntities: entities
-    }
+      invalidEntities: entities,
+    };
   }
 
   @MessagePattern('validate_entity_documents')
-  async validateEntityDocuments({entityId, entityType}): Promise<ValidDocumentDTO>{
+  async validateEntityDocuments({
+    entityId,
+    entityType,
+  }): Promise<ValidDocumentDTO> {
     this.logger.debug('Validating entity documents');
     return this.documentsService.validateEntityDocuments(entityId, entityType);
-  } 
-
+  }
 }

@@ -29,6 +29,7 @@ import {
 import { DocumentQuery } from './interfaces/document-query.interface';
 import { EntityEnum } from 'src/enums/entity.enum';
 import { ValidDocumentDTO } from './dto/valid-document.dto';
+import { Severities } from 'src/enums/severities.enum';
 
 @Injectable()
 export class DocumentsService {
@@ -39,7 +40,7 @@ export class DocumentsService {
     private documentRepository: Repository<DocumentEntity>,
     @InjectRepository(DocumentTypeEntity)
     private documentTypeRepository: Repository<DocumentTypeEntity>,
-  ) { }
+  ) {}
 
   async findAll({
     entityId,
@@ -49,7 +50,7 @@ export class DocumentsService {
     state,
     contractorId,
   }: DocumentRequestDto): Promise<DocumentDto[]> {
-    let where: DocumentQuery = {
+    const where: DocumentQuery = {
       active: true,
     };
 
@@ -91,17 +92,17 @@ export class DocumentsService {
       relations: ['type'],
     });
 
-    let documentsDto: DocumentDto[] = [];
+    const documentsDto: DocumentDto[] = [];
 
     if (documents.length) {
       this.logger.debug(documents.length + ' documents where found');
       for (const document of documents) {
-        let photos = await getPhoto(
+        const photos = await getPhoto(
           document.entityType,
           document.entityId,
           document.type.id,
         );
-        let documentDto: DocumentDto = { ...document, photos };
+        const documentDto: DocumentDto = { ...document, photos };
         documentsDto.push(documentDto);
       }
     }
@@ -153,7 +154,8 @@ export class DocumentsService {
 
     if (documentType.appliesTo != documentDto.entityType) {
       this.logger.error(
-        `Error creating document, this document type (${documentType.name
+        `Error creating document, this document type (${
+          documentType.name
         }) isn't applicable to ${EntityEnum[documentDto.entityType]} type`,
       );
       throw new RpcException({
@@ -263,19 +265,29 @@ export class DocumentsService {
     return updatedDocument;
   }
 
-  async updateState(id: number, state: States, comment: string, auditorUuid: string): Promise<DocumentEntity> {
+  async updateState(
+    id: number,
+    state: States,
+    comment: string,
+    auditorUuid: string,
+  ): Promise<DocumentEntity> {
     const document: DocumentEntity = await this.documentRepository.findOne(id);
     if (document) {
       if (isValidStateUpdate(document.state, state)) {
-        this.documentRepository.merge(document, { state, comment, auditorUuid });
+        this.documentRepository.merge(document, {
+          state,
+          comment,
+          auditorUuid,
+        });
         return this.documentRepository.save(document);
       } else {
         this.logger.error(
           `Error updating document State, invalid state update: ${document.state} to ${state}`,
         );
         throw new RpcException({
-          message: `No es posible cambiar un documento del estado ${statesTranslationArray[document.state]
-            } a ${statesTranslationArray[state]}`,
+          message: `No es posible cambiar un documento del estado ${
+            statesTranslationArray[document.state]
+          } a ${statesTranslationArray[state]}`,
         });
       }
     } else {
@@ -289,92 +301,129 @@ export class DocumentsService {
     }
   }
 
-  async getDocumentsEntitiesIds(contractorId: number, entityType: number, states: States[], missing: boolean): Promise<number[]> {
-
+  async getDocumentsEntitiesIds(
+    contractorId: number,
+    entityType: number,
+    states: States[],
+    missing: boolean,
+  ): Promise<number[]> {
     const [missingDocuments, statesDocuments] = await Promise.all([
-      this.getMissing(missing, contractorId, entityType), 
-      this.getByState(states, contractorId, entityType)]
-    )
+      this.getMissing(missing, contractorId, entityType),
+      this.getByState(states, contractorId, entityType),
+    ]);
 
     console.log(missingDocuments);
     console.log(statesDocuments);
 
-    const entitiesIds = missingDocuments.map(d => d.entityId).concat(statesDocuments.map(d => d.entityId));
-    return [...new Set(entitiesIds)]
+    const entitiesIds = missingDocuments
+      .map((d) => d.entityId)
+      .concat(statesDocuments.map((d) => d.entityId));
+    return [...new Set(entitiesIds)];
   }
 
-  private getMissing(missing: boolean, contractorId: number, entityType: number): Promise<any[]> {
+  private getMissing(
+    missing: boolean,
+    contractorId: number,
+    entityType: number,
+  ): Promise<any[]> {
     if (missing) {
-      const subQuery: SelectQueryBuilder<DocumentTypeEntity> = this.documentTypeRepository.createQueryBuilder("dte2")
-        .select("COUNT(*)")
-        .where("dte2.appliesTo = de.entityType");
+      const subQuery: SelectQueryBuilder<DocumentTypeEntity> =
+        this.documentTypeRepository
+          .createQueryBuilder('dte2')
+          .select('COUNT(*)')
+          .where('dte2.appliesTo = de.entityType');
 
-      return getConnection().createQueryBuilder()
-        .select("de.entityId", "entityId")
-        .addSelect("COUNT(*)", "cant")
-        .from(DocumentEntity, "de")
-        .where("de.contractorId = :contractorId", { contractorId })
-        .andWhere("de.entityType = :entityType", { entityType })
-        .andWhere("de.active = TRUE")
-        .groupBy("de.entityId")
-        .addGroupBy("de.entityType")
-        .having("`cant` != (" + subQuery.getQuery() + ")")
+      return getConnection()
+        .createQueryBuilder()
+        .select('de.entityId', 'entityId')
+        .addSelect('COUNT(*)', 'cant')
+        .from(DocumentEntity, 'de')
+        .where('de.contractorId = :contractorId', { contractorId })
+        .andWhere('de.entityType = :entityType', { entityType })
+        .andWhere('de.active = TRUE')
+        .groupBy('de.entityId')
+        .addGroupBy('de.entityType')
+        .having('`cant` != (' + subQuery.getQuery() + ')')
         .getRawMany();
     }
     return Promise.resolve([]);
   }
 
-  private getByState(states: States[], contractorId: number, entityType: number): Promise<any[]> {
+  private getByState(
+    states: States[],
+    contractorId: number,
+    entityType: number,
+  ): Promise<any[]> {
     if (states.length) {
-      return getConnection().createQueryBuilder()
-        .select("de2.entityId", "entityId")
+      return getConnection()
+        .createQueryBuilder()
+        .select('de2.entityId', 'entityId')
         .distinct(true)
-        .addSelect("de2.entityType","entityType")
-        .from(DocumentEntity, "de2")
-        .where("de2.state in (:states)", { states })
-        .andWhere("de2.contractorId = :contractorId", { contractorId })
-        .andWhere("de2.entityType = :entityType", { entityType })
-        .andWhere("de2.active = TRUE ")
+        .addSelect('de2.entityType', 'entityType')
+        .from(DocumentEntity, 'de2')
+        .where('de2.state in (:states)', { states })
+        .andWhere('de2.contractorId = :contractorId', { contractorId })
+        .andWhere('de2.entityType = :entityType', { entityType })
+        .andWhere('de2.active = TRUE ')
         .getRawMany();
     }
     return Promise.resolve([]);
   }
 
-  async validateEntityDocuments(entityId: number, entityType: number): Promise<ValidDocumentDTO> {
-
+  async validateEntityDocuments(
+    entityId: number,
+    entityType: number,
+  ): Promise<ValidDocumentDTO> {
     const types: DocumentTypeEntity[] = await this.documentTypeRepository.find({
       where: {
-        appliesTo: entityType
-      }
-    })
+        appliesTo: entityType,
+      },
+    });
 
-    const typesIds = types.map(t => t.id)
+    const typesIds = types.map((t) => t.id);
 
     const documents: DocumentEntity[] = await this.documentRepository.find({
       where: {
         entityId,
-        entityType
+        entityType,
       },
-      relations: ["type"]
-    })
+      relations: ['type'],
+    });
 
     let isValid = true;
-    const missingDocuments = []
-    typesIds.forEach(tid => {
-      if(documents.findIndex(d => d.type.id === tid) == -1){
-        missingDocuments.push(types.find(t => t.id == tid));
+    let isExceptuable = true;
+    const missingDocuments: DocumentTypeEntity[] = [];
+    typesIds.forEach((tid) => {
+      if (documents.findIndex((d) => d.type.id === tid) == -1) {
+        missingDocuments.push(types.find((t) => t.id == tid));
       }
     });
 
-    if(missingDocuments.length){
+    if (missingDocuments.length) {
       isValid = false;
+      const severeMissingDocuments = missingDocuments.filter(
+        (md) => md.severity === Severities.HIGH,
+      );
+      if (severeMissingDocuments.length) {
+        isExceptuable = false;
+      }
+    }
+
+    const severeDocuments = documents.filter(
+      (d) => d.type.severity === Severities.HIGH && d.state !== States.ACCEPTED,
+    );
+
+    if (severeDocuments.length) {
+      isValid = false;
+      isExceptuable = false;
     }
 
     return {
-      isValid: isValid,
+      isValid,
+      isExceptuable,
       missingDocuments: missingDocuments,
-      entityDocuments: documents
-    }   
+      invalidDocuments: severeDocuments,
+    };
   }
 
   private isDateBeforeToday(date: Date) {
