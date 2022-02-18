@@ -1,4 +1,4 @@
-import { DocumentTypeDto } from "src/types/type.dto";
+import { DocumentTypeDto } from 'src/types/type.dto';
 
 export class DocumentDto {
   id?: number;

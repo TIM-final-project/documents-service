@@ -7,7 +7,7 @@ import {
   LessThanOrEqual,
   MoreThanOrEqual,
   Repository,
-  SelectQueryBuilder,
+  SelectQueryBuilder
 } from 'typeorm';
 import { DocumentEntity } from './document.entity';
 import { CreateDocumentDto } from './dto/create-document.dto';
@@ -19,16 +19,16 @@ import {
   getPhoto,
   savePhotos,
   isBase64,
-  isValidFormat,
+  isValidFormat
 } from 'src/utils/photosHandler';
 import { States } from 'src/enums/states.enum';
 import {
   isValidStateUpdate,
-  statesTranslationArray,
+  statesTranslationArray
 } from 'src/utils/documents';
 import { DocumentQuery } from './interfaces/document-query.interface';
 import { EntityEnum } from 'src/enums/entity.enum';
-import { ValidDocumentDTO } from './dto/valid-document.dto';
+import { DocumentationStateResponseDTO } from './dto/documentation-state-response.dto';
 import { Severities } from 'src/enums/severities.enum';
 
 @Injectable()
@@ -39,7 +39,7 @@ export class DocumentsService {
     @InjectRepository(DocumentEntity)
     private documentRepository: Repository<DocumentEntity>,
     @InjectRepository(DocumentTypeEntity)
-    private documentTypeRepository: Repository<DocumentTypeEntity>,
+    private documentTypeRepository: Repository<DocumentTypeEntity>
   ) {}
 
   async findAll({
@@ -48,10 +48,10 @@ export class DocumentsService {
     before,
     after,
     state,
-    contractorId,
+    contractorId
   }: DocumentRequestDto): Promise<DocumentDto[]> {
     const where: DocumentQuery = {
-      active: true,
+      active: true
     };
 
     this.logger.debug('All Documents', {
@@ -60,7 +60,7 @@ export class DocumentsService {
       before,
       after,
       state,
-      contractorId,
+      contractorId
     });
 
     if (!!state) {
@@ -79,7 +79,7 @@ export class DocumentsService {
     if (!!before && !!after) {
       where.expirationDate = Between(
         new Date(after).toISOString(),
-        new Date(before).toISOString(),
+        new Date(before).toISOString()
       );
     } else if (!!after) {
       where.expirationDate = MoreThanOrEqual(new Date(after).toISOString());
@@ -89,7 +89,7 @@ export class DocumentsService {
     this.logger.debug({ where });
     const documents: DocumentEntity[] = await this.documentRepository.find({
       where,
-      relations: ['type'],
+      relations: ['type']
     });
 
     const documentsDto: DocumentDto[] = [];
@@ -100,7 +100,7 @@ export class DocumentsService {
         const photos = await getPhoto(
           document.entityType,
           document.entityId,
-          document.type.id,
+          document.type.id
         );
         const documentDto: DocumentDto = { ...document, photos };
         documentsDto.push(documentDto);
@@ -112,13 +112,13 @@ export class DocumentsService {
 
   async findOne(id: number): Promise<DocumentDto> {
     const document: DocumentEntity = await this.documentRepository.findOne(id, {
-      relations: ['type'],
+      relations: ['type']
     });
 
     const photos: Array<string> = await getPhoto(
       document.entityType,
       document.entityId,
-      document.type.id,
+      document.type.id
     );
 
     return { ...document, photos };
@@ -128,27 +128,27 @@ export class DocumentsService {
     documentDto: CreateDocumentDto,
     type: number,
     photos: Array<string>,
-    mimes: Array<string>,
+    mimes: Array<string>
   ): Promise<DocumentEntity> {
     const documentType: DocumentTypeEntity =
       await this.documentTypeRepository.findOne(type);
     if (!!!documentType) {
       this.logger.error(
-        `Error creating document, document type doesn't exist: ${type} `,
+        `Error creating document, document type doesn't exist: ${type} `
       );
       throw new RpcException({
         message: 'No se encuentra el tipo de documento ' + type,
-        status: HttpStatus.NOT_FOUND,
+        status: HttpStatus.NOT_FOUND
       });
     }
 
     if (!!!EntityEnum[documentDto.entityType]) {
       this.logger.error(
-        `Error creating document, entity type doesn't exist: ${documentDto.entityType} `,
+        `Error creating document, entity type doesn't exist: ${documentDto.entityType} `
       );
       throw new RpcException({
         message: 'El tipo de entidad no existe ',
-        status: HttpStatus.BAD_REQUEST,
+        status: HttpStatus.BAD_REQUEST
       });
     }
 
@@ -156,11 +156,11 @@ export class DocumentsService {
       this.logger.error(
         `Error creating document, this document type (${
           documentType.name
-        }) isn't applicable to ${EntityEnum[documentDto.entityType]} type`,
+        }) isn't applicable to ${EntityEnum[documentDto.entityType]} type`
       );
       throw new RpcException({
         message: 'El documento no es aplicable a la entidad ',
-        status: HttpStatus.BAD_REQUEST,
+        status: HttpStatus.BAD_REQUEST
       });
     }
 
@@ -171,7 +171,7 @@ export class DocumentsService {
           throw new RpcException({
             message:
               'Las fotos asociadas al documento no poseen un formato válido',
-            status: HttpStatus.BAD_REQUEST,
+            status: HttpStatus.BAD_REQUEST
           });
         }
       });
@@ -182,8 +182,8 @@ export class DocumentsService {
         entityId: documentDto.entityId,
         entityType: documentDto.entityType,
         type: documentType,
-        active: true,
-      },
+        active: true
+      }
     });
 
     if (documents.length) {
@@ -199,11 +199,11 @@ export class DocumentsService {
 
     const document: DocumentEntity = {
       ...documentDto,
-      type: documentType,
+      type: documentType
     };
 
     const documentCreated: DocumentEntity = await this.documentRepository.save(
-      document,
+      document
     );
 
     savePhotos(
@@ -212,7 +212,7 @@ export class DocumentsService {
       documentDto.entityType,
       documentDto.entityId,
       documentType.id,
-      documentCreated.created_at,
+      documentCreated.created_at
     );
 
     return documentCreated;
@@ -222,16 +222,16 @@ export class DocumentsService {
     id: number,
     documentDto: UpdateDocumentDto,
     photos: Array<string>,
-    mimes: Array<string>,
+    mimes: Array<string>
   ): Promise<DocumentEntity> {
     const document: DocumentEntity = await this.documentRepository.findOne(id, {
-      relations: ['type'],
+      relations: ['type']
     });
 
     if (!!!document) {
       throw new RpcException({
         message: 'No se encontro el documento a modificar.',
-        status: HttpStatus.NOT_FOUND,
+        status: HttpStatus.NOT_FOUND
       });
     }
 
@@ -239,7 +239,7 @@ export class DocumentsService {
       if (!this.isDateBeforeToday(documentDto.expirationDate)) {
         throw new RpcException({
           message: 'La fecha debe ser posterior a la fecha de hoy.',
-          status: HttpStatus.BAD_REQUEST,
+          status: HttpStatus.BAD_REQUEST
         });
       }
 
@@ -247,7 +247,7 @@ export class DocumentsService {
     }
 
     const updatedDocument: DocumentEntity = await this.documentRepository.save(
-      document,
+      document
     );
 
     if (photos.length) {
@@ -258,7 +258,7 @@ export class DocumentsService {
         document.entityType,
         document.entityId,
         document.type.id,
-        updatedDocument.updated_at,
+        updatedDocument.updated_at
       );
     }
 
@@ -269,7 +269,7 @@ export class DocumentsService {
     id: number,
     state: States,
     comment: string,
-    auditorUuid: string,
+    auditorUuid: string
   ): Promise<DocumentEntity> {
     const document: DocumentEntity = await this.documentRepository.findOne(id);
     if (document) {
@@ -277,26 +277,26 @@ export class DocumentsService {
         this.documentRepository.merge(document, {
           state,
           comment,
-          auditorUuid,
+          auditorUuid
         });
         return this.documentRepository.save(document);
       } else {
         this.logger.error(
-          `Error updating document State, invalid state update: ${document.state} to ${state}`,
+          `Error updating document State, invalid state update: ${document.state} to ${state}`
         );
         throw new RpcException({
           message: `No es posible cambiar un documento del estado ${
             statesTranslationArray[document.state]
-          } a ${statesTranslationArray[state]}`,
+          } a ${statesTranslationArray[state]}`
         });
       }
     } else {
       this.logger.error(
         'Error updating document State, no document with id: ',
-        id,
+        id
       );
       throw new RpcException({
-        message: `No exite un documento con el id: ${id}`,
+        message: `No exite un documento con el id: ${id}`
       });
     }
   }
@@ -305,11 +305,11 @@ export class DocumentsService {
     contractorId: number,
     entityType: number,
     states: States[],
-    missing: boolean,
+    missing: boolean
   ): Promise<number[]> {
     const [missingDocuments, statesDocuments] = await Promise.all([
       this.getMissing(missing, contractorId, entityType),
-      this.getByState(states, contractorId, entityType),
+      this.getByState(states, contractorId, entityType)
     ]);
 
     console.log(missingDocuments);
@@ -324,7 +324,7 @@ export class DocumentsService {
   private getMissing(
     missing: boolean,
     contractorId: number,
-    entityType: number,
+    entityType: number
   ): Promise<any[]> {
     if (missing) {
       const subQuery: SelectQueryBuilder<DocumentTypeEntity> =
@@ -352,7 +352,7 @@ export class DocumentsService {
   private getByState(
     states: States[],
     contractorId: number,
-    entityType: number,
+    entityType: number
   ): Promise<any[]> {
     if (states.length) {
       return getConnection()
@@ -373,11 +373,12 @@ export class DocumentsService {
   async validateEntityDocuments(
     entityId: number,
     entityType: number,
-  ): Promise<ValidDocumentDTO> {
+    expand?: string
+  ): Promise<DocumentationStateResponseDTO> {
     const types: DocumentTypeEntity[] = await this.documentTypeRepository.find({
       where: {
-        appliesTo: entityType,
-      },
+        appliesTo: entityType
+      }
     });
 
     const typesIds = types.map((t) => t.id);
@@ -386,9 +387,9 @@ export class DocumentsService {
       where: {
         entityId,
         entityType,
-        active: true,
+        active: true
       },
-      relations: ['type'],
+      relations: ['type']
     });
 
     let isValid = true;
@@ -403,27 +404,39 @@ export class DocumentsService {
     if (missingDocuments.length) {
       isValid = false;
       const severeMissingDocuments = missingDocuments.filter(
-        (md) => md.severity === Severities.HIGH,
+        (md) => md.severity === Severities.HIGH
       );
       if (severeMissingDocuments.length) {
         isExceptuable = false;
       }
     }
 
-    const severeDocuments = documents.filter(
-      (d) => d.type.severity === Severities.HIGH && d.state !== States.ACCEPTED,
+    const severeDocuments: Array<DocumentDto> = documents.filter(
+      (d) => d.type.severity === Severities.HIGH && d.state !== States.ACCEPTED
     );
 
     if (severeDocuments.length) {
       isValid = false;
       isExceptuable = false;
+      this.logger.debug(`expand: ${expand}`);
+      if (!!expand && expand == 'photos') {
+        this.logger.debug('Composing photos in severeDocuments');
+        for (const doc of severeDocuments) {
+          const photos: Array<string> = await getPhoto(
+            entityType,
+            entityId,
+            doc.type.id
+          );
+          doc.photos = photos;
+        }
+      }
     }
 
     return {
       isValid,
       isExceptuable,
       missingDocuments: missingDocuments,
-      invalidDocuments: severeDocuments,
+      invalidDocuments: severeDocuments
     };
   }
 

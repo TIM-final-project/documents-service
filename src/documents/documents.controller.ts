@@ -4,8 +4,9 @@ import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { DocumentDto } from './dto/document.dto';
 import { DocumentRequestDto } from './dto/documents-request.dto';
-import { ValidDocumentDTO } from './dto/valid-document.dto';
+import { DocumentationStateResponseDTO } from './dto/documentation-state-response.dto';
 import { updateInterface, updateState } from './interfaces/update.interface';
+import { DocumentationStateRequestDTO } from './dto/documentation-state-request.dto';
 
 @Controller('documents')
 export class DocumentsController {
@@ -37,7 +38,7 @@ export class DocumentsController {
 
     if (!documentDto.photos.length) {
       throw new RpcException({
-        message: 'Es necesario cargar una foto asociada al documento.',
+        message: 'Es necesario cargar una foto asociada al documento.'
       });
     }
 
@@ -53,7 +54,7 @@ export class DocumentsController {
   @MessagePattern('documents_update')
   async update({
     id,
-    updateDocumentDto,
+    updateDocumentDto
   }: updateInterface): Promise<DocumentDto> {
     const photos: Array<string> = [];
     const mimes: Array<string> = [];
@@ -72,23 +73,23 @@ export class DocumentsController {
     id,
     state,
     comment,
-    auditorUuid,
+    auditorUuid
   }: updateState): Promise<DocumentDto> {
     this.logger.debug('Changing document state', {
       id,
       state,
       comment,
-      auditorUuid,
+      auditorUuid
     });
 
     if (comment?.length) {
       return this.documentsService.updateState(id, state, comment, auditorUuid);
     } else {
       this.logger.error(
-        'Error auditing document, comment cannot be an empty string',
+        'Error auditing document, comment cannot be an empty string'
       );
       throw new RpcException({
-        message: `Debe escribir un comentario sobre la auditoria.`,
+        message: `Debe escribir un comentario sobre la auditoria.`
       });
     }
   }
@@ -98,27 +99,30 @@ export class DocumentsController {
     contractorId,
     entityType,
     states,
-    missing,
+    missing
   }): Promise<{ invalidEntities: number[] }> {
     const entities: number[] =
       await this.documentsService.getDocumentsEntitiesIds(
         contractorId,
         entityType,
         states,
-        missing,
+        missing
       );
 
     return {
-      invalidEntities: entities,
+      invalidEntities: entities
     };
   }
 
   @MessagePattern('validate_entity_documents')
-  async validateEntityDocuments({
-    entityId,
-    entityType,
-  }): Promise<ValidDocumentDTO> {
+  async validateEntityDocuments(
+    dto: DocumentationStateRequestDTO
+  ): Promise<DocumentationStateResponseDTO> {
     this.logger.debug('Validating entity documents');
-    return this.documentsService.validateEntityDocuments(entityId, entityType);
+    return this.documentsService.validateEntityDocuments(
+      dto.entityId,
+      dto.entityType,
+      dto.expand
+    );
   }
 }
