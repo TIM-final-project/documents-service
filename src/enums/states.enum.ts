@@ -1,6 +1,6 @@
 export enum States {
-  PENDING,
-  ACCEPTED,
-  REJECTED,
-  EXPIRED,
+  PENDING = '0',
+  ACCEPTED = '1',
+  REJECTED = '2',
+  EXPIRED = '3'
 }

@@ -5,8 +5,10 @@ import { CreateDocumentDto } from './dto/create-document.dto';
 import { DocumentDto } from './dto/document.dto';
 import { DocumentRequestDto } from './dto/documents-request.dto';
 import { DocumentationStateResponseDTO } from './dto/documentation-state-response.dto';
-import { updateInterface, updateState } from './interfaces/update.interface';
 import { DocumentationStateRequestDTO } from './dto/documentation-state-request.dto';
+import { UpdateDocumentState } from './dto/update-state.dto';
+import { UpdateDocumentDto } from './dto/update-document.dto';
+import { States } from 'src/enums/states.enum';
 
 @Controller('documents')
 export class DocumentsController {
@@ -52,38 +54,39 @@ export class DocumentsController {
 
   // @Put(':id')
   @MessagePattern('documents_update')
-  async update({
-    id,
-    updateDocumentDto
-  }: updateInterface): Promise<DocumentDto> {
+  async update(updateDTO: {
+    id: number;
+    dto: UpdateDocumentDto;
+  }): Promise<DocumentDto> {
     const photos: Array<string> = [];
     const mimes: Array<string> = [];
-    if (updateDocumentDto.photos?.length) {
-      updateDocumentDto.photos.forEach((photo) => {
+    if (updateDTO.dto.photos?.length) {
+      updateDTO.dto.photos.forEach((photo) => {
         mimes.push(photo.substring(0, photo.indexOf(',')));
         photos.push(photo.substring(photo.indexOf(',') + 1));
       });
     }
 
-    return this.documentsService.update(id, updateDocumentDto, photos, mimes);
+    return this.documentsService.update(
+      updateDTO.id,
+      updateDTO.dto,
+      photos,
+      mimes
+    );
   }
 
   @MessagePattern('document_change_state')
-  async changeState({
-    id,
-    state,
-    comment,
-    auditorUuid
-  }: updateState): Promise<DocumentDto> {
-    this.logger.debug('Changing document state', {
-      id,
-      state,
-      comment,
-      auditorUuid
-    });
-
-    if (comment?.length) {
-      return this.documentsService.updateState(id, state, comment, auditorUuid);
+  async changeState(
+    updateDocumentState: UpdateDocumentState
+  ): Promise<DocumentDto> {
+    this.logger.debug('Changing document state', updateDocumentState);
+    if (updateDocumentState.comment?.length) {
+      return this.documentsService.updateState(
+        updateDocumentState.id,
+        updateDocumentState.state,
+        updateDocumentState.comment,
+        updateDocumentState.auditorUuid
+      );
     } else {
       this.logger.error(
         'Error auditing document, comment cannot be an empty string'
