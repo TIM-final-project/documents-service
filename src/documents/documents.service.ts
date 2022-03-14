@@ -30,6 +30,8 @@ import { DocumentQuery } from './interfaces/document-query.interface';
 import { EntityEnum } from 'src/enums/entity.enum';
 import { DocumentationStateResponseDTO } from './dto/documentation-state-response.dto';
 import { Severities } from 'src/enums/severities.enum';
+import { plainToInstance } from 'class-transformer'
+import { DocumentTypeDto } from 'src/types/type.dto';
 
 @Injectable()
 export class DocumentsService {
@@ -411,32 +413,49 @@ export class DocumentsService {
       }
     }
 
-    const severeDocuments: Array<DocumentDto> = documents.filter(
+    let invalidDocuments: DocumentEntity[] = [];
+
+    const exeptuableDocuments: DocumentEntity[] = documents.filter(
+      (d) => d.type.severity !== Severities.HIGH && d.state !== States.ACCEPTED
+    );
+
+    if (exeptuableDocuments.length) {
+      isValid = false;
+      invalidDocuments.push(...exeptuableDocuments);
+    }
+
+    const severeDocuments: DocumentEntity[] = documents.filter(
       (d) => d.type.severity === Severities.HIGH && d.state !== States.ACCEPTED
     );
 
     if (severeDocuments.length) {
       isValid = false;
       isExceptuable = false;
-      this.logger.debug(`expand: ${expand}`);
-      if (!!expand && expand == 'photos') {
-        this.logger.debug('Composing photos in severeDocuments');
-        for (const doc of severeDocuments) {
-          const photos: Array<string> = await getPhoto(
-            entityType,
-            entityId,
-            doc.type.id
-          );
-          doc.photos = photos;
-        }
-      }
+      invalidDocuments.push(...severeDocuments);
     }
 
+    const missingDocumentsDTO : DocumentTypeDto[] = missingDocuments.map((md) => plainToInstance(DocumentTypeDto, md));
+
+    const invalidDocumentsDTO : DocumentDto[] = invalidDocuments.map((id) => plainToInstance(DocumentEntity, id));
+
+    this.logger.debug(`expand: ${expand}`);
+    if (!!expand && expand == 'photos') {
+      this.logger.debug('Composing photos in documents');
+      for (const doc of invalidDocumentsDTO) {
+        const photos: Array<string> = await getPhoto(
+          entityType,
+          entityId,
+          doc.type.id
+        );
+        doc.photos = photos;
+      }
+    }
+    
     return {
       isValid,
       isExceptuable,
-      missingDocuments: missingDocuments,
-      invalidDocuments: severeDocuments
+      missingDocuments: missingDocumentsDTO,
+      invalidDocuments: invalidDocumentsDTO
     };
   }
 
