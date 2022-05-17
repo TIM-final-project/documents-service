@@ -3,19 +3,28 @@ import {
     NestInterceptor,
     ExecutionContext,
     CallHandler,
-  } from '@nestjs/common';
-  import { Observable } from 'rxjs';
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const newrelic = require('newrelic');
+} from '@nestjs/common';
+import { Observable, tap } from 'rxjs';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const newrelic = require('newrelic');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const util = require('util');
   
-  @Injectable()
-  export class NewrelicInterceptor implements NestInterceptor {
+@Injectable()
+export class NewrelicInterceptor implements NestInterceptor {
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-      return newrelic.startWebTransaction(context.getHandler().name, function () {
-        const transaction = newrelic.getTransaction();
-  
-        return next.handle().pipe(
-          () => transaction.end());
-      });
+        return newrelic.startWebTransaction(context.getHandler().name, function () {
+            const transaction = newrelic.getTransaction();
+            return next.handle().pipe(
+            tap(() => {
+                console.log(
+                `Child Interceptor after: ${util.inspect(
+                    context.getHandler().name,
+                )}`,
+                );
+                return transaction.end();
+            }),
+            );
+        });
     }
-  }
+}
