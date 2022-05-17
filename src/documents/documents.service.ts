@@ -406,9 +406,10 @@ export class DocumentsService {
     if (missingDocuments.length) {
       isValid = false;
       const severeMissingDocuments = missingDocuments.filter(
-        (md) => md.severity === Severities.HIGH
+        (md) => md.severity == Severities.HIGH
       );
       if (severeMissingDocuments.length) {
+        this.logger.debug("Missing severe documents, not exceptuable");
         isExceptuable = false;
       }
     }
