@@ -30,7 +30,7 @@ import { DocumentQuery } from './interfaces/document-query.interface';
 import { EntityEnum } from 'src/enums/entity.enum';
 import { DocumentationStateResponseDTO } from './dto/documentation-state-response.dto';
 import { Severities } from 'src/enums/severities.enum';
-import { plainToInstance } from 'class-transformer'
+import { plainToInstance } from 'class-transformer';
 import { DocumentTypeDto } from 'src/types/type.dto';
 
 @Injectable()
@@ -409,12 +409,12 @@ export class DocumentsService {
         (md) => md.severity == Severities.HIGH
       );
       if (severeMissingDocuments.length) {
-        this.logger.debug("Missing severe documents, not exceptuable");
+        this.logger.debug('Missing severe documents, not exceptuable');
         isExceptuable = false;
       }
     }
 
-    let invalidDocuments: DocumentEntity[] = [];
+    const invalidDocuments: DocumentEntity[] = [];
 
     const exeptuableDocuments: DocumentEntity[] = documents.filter(
       (d) => d.type.severity !== Severities.HIGH && d.state !== States.ACCEPTED
@@ -435,9 +435,13 @@ export class DocumentsService {
       invalidDocuments.push(...severeDocuments);
     }
 
-    const missingDocumentsDTO : DocumentTypeDto[] = missingDocuments.map((md) => plainToInstance(DocumentTypeDto, md));
+    const missingDocumentsDTO: DocumentTypeDto[] = missingDocuments.map((md) =>
+      plainToInstance(DocumentTypeDto, md)
+    );
 
-    const invalidDocumentsDTO : DocumentDto[] = invalidDocuments.map((id) => plainToInstance(DocumentEntity, id));
+    const invalidDocumentsDTO: DocumentDto[] = invalidDocuments.map((id) =>
+      plainToInstance(DocumentEntity, id)
+    );
 
     this.logger.debug(`expand: ${expand}`);
     if (!!expand && expand == 'photos') {
@@ -451,7 +455,7 @@ export class DocumentsService {
         doc.photos = photos;
       }
     }
-    
+
     return {
       isValid,
       isExceptuable,

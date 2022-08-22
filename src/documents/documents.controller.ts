@@ -8,8 +8,6 @@ import { DocumentationStateResponseDTO } from './dto/documentation-state-respons
 import { DocumentationStateRequestDTO } from './dto/documentation-state-request.dto';
 import { UpdateDocumentState } from './dto/update-state.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
-import { States } from 'src/enums/states.enum';
-
 @Controller('documents')
 export class DocumentsController {
   private logger = new Logger(DocumentsController.name);
