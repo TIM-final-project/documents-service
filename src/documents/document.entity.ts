@@ -1,6 +1,13 @@
 import { States } from '../enums/states.enum';
 import { DocumentTypeEntity } from 'src/types/type.entity';
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn
+} from 'typeorm';
 
 @Entity()
 export class DocumentEntity {
@@ -8,7 +15,7 @@ export class DocumentEntity {
   id?: number;
 
   @Column({
-    nullable: false,
+    nullable: false
   })
   expirationDate: Date;
 
@@ -20,7 +27,9 @@ export class DocumentEntity {
   })
   state?: States;
 
-  @ManyToOne(() => DocumentTypeEntity, (type) => type.documents)
+  @ManyToOne(() => DocumentTypeEntity, (type) => type.documents, {
+    onDelete: 'CASCADE'
+  })
   type: DocumentTypeEntity;
 
   @Column({
